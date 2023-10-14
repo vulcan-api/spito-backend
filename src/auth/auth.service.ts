@@ -3,14 +3,12 @@ import { JwtAuthDto, LoginDto, RegisterDto } from './dto';
 import { DbService } from '../db/db.service';
 import { sha512 } from 'js-sha512';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: DbService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
   ) {}
 
   async signup(dto: RegisterDto): Promise<object> {
@@ -63,7 +61,6 @@ export class AuthService {
       'jwt',
       jwt,
       {
-        domain: this.configService.get<string>('COOKIE_DOMAIN', 'localhost'),
         secure: true,
         sameSite: 'lax',
       },
