@@ -12,7 +12,6 @@ export class AuthService {
   ) {}
 
   async signup(dto: RegisterDto): Promise<object> {
-    console.table({ username: dto.username });
     const isTaken = await this.isTaken(dto.username, dto.email);
     if (isTaken) throw new ForbiddenException('Username or email is taken!');
 
@@ -49,7 +48,6 @@ export class AuthService {
   }
 
   async generateAuthJwt(payload: JwtAuthDto): Promise<string> {
-    console.log('payload: ', payload);
     return this.jwtService.sign(payload);
   }
 

@@ -7,7 +7,8 @@ import { JwtStrategy } from './strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginModule } from './login/login.module';
 
-const { SECRET: secret = 'secret' } = process.env;
+const { SECRET: secret = 'secret', EXPIRES_IN: expiresIn = 3600 * 24 } =
+  process.env;
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ const { SECRET: secret = 'secret' } = process.env;
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret,
-      signOptions: { expiresIn: 3600 * 24 * 30 },
+      signOptions: { expiresIn: expiresIn },
     }),
     LoginModule,
   ],
