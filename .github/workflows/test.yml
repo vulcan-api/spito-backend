@@ -23,7 +23,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm i 
+        run: pnpm i
+      - name: Generate prisma
+        run: npx prisma generate
       - name: Check formatting
         run: pnpm format-check
       - name: Build project
