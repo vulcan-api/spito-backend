@@ -15,7 +15,7 @@ export class AuthService {
     const isTaken = await this.isTaken(dto.username, dto.email);
     if (isTaken) throw new ForbiddenException('Username or email is taken!');
 
-    const user = await this.prisma.user.create({
+    await this.prisma.user.create({
       data: {
         username: dto.username,
         password: sha512(dto.password),
