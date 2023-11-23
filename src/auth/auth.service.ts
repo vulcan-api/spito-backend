@@ -25,17 +25,22 @@ export class AuthService {
     return { msg: 'Successfully registered a new account!' };
   }
 
-  async login(dto: LoginDto): Promise<[string, string, object] | []> {
+  async login(dto: LoginDto): Promise<object> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { email: dto.email },
     });
 
-    if (sha512(dto.password) === user.password) {
-      return this.generateAuthCookie({
-        userId: user.id,
-      });
-    }
-    throw new ForbiddenException('Wrong credentials!');
+    if (!user || !(sha512(dto.password) === user.password))
+      throw new ForbiddenException('Wrong credentials!');
+
+    const jwt = await this.generateAuthJwt({
+      userId: user.id,
+    });
+
+    return {
+      token: jwt,
+      userInfo: await this.getUserPublicInfo(dto.email),
+    };
   }
 
   async isTaken(username: string, email: string): Promise<boolean> {
@@ -49,20 +54,6 @@ export class AuthService {
 
   async generateAuthJwt(payload: JwtAuthDto): Promise<string> {
     return this.jwtService.sign(payload);
-  }
-
-  async generateAuthCookie(
-    payload: JwtAuthDto,
-  ): Promise<[string, string, object]> {
-    const jwt = await this.generateAuthJwt(payload);
-    return [
-      'jwt',
-      jwt,
-      {
-        secure: true,
-        sameSite: 'lax',
-      },
-    ];
   }
 
   async getUserPublicInfo(email: string): Promise<object> {
