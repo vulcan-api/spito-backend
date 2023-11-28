@@ -30,11 +30,17 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    const roles = await this.prisma.roles.findMany({
+      where: { userId: user.id },
+      select: { role: true },
+    });
+
     if (!user || !(sha512(dto.password) === user.password))
       throw new ForbiddenException('Wrong credentials!');
 
     const jwt = await this.generateAuthJwt({
       userId: user.id,
+      roles: roles.map((role) => role.role),
     });
 
     return {
@@ -67,6 +73,15 @@ export class AuthService {
         username: true,
       },
     });
+    const roles = await prisma.roles.findMany({
+      where: {
+        userId: userPublicInfo.id,
+      },
+      select: {
+        role: true,
+      },
+    });
+    userPublicInfo.roles = roles.map((role) => role.role);
     return userPublicInfo;
   }
 }

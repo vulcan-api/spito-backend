@@ -8,9 +8,21 @@ datasource db {
 }
 
 model User {
-  id                   Int                    @id @default(autoincrement())
-  email                String                 @unique
-  username             String
-  password             String
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  username String
+  password String
+  Roles    Roles[]
 }
 
+model Roles {
+  id     Int  @id @default(autoincrement())
+  role   Role @default(USER)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  VERIFIED_USER
+  USER
+}
