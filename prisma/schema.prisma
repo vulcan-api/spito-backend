@@ -12,6 +12,9 @@ model User {
   email    String  @unique
   username String
   password String
+  avatar               Bytes?
+  banner               Bytes?
+  description          String?
   Roles    Roles[]
 }
 
