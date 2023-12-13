@@ -6,11 +6,11 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
-  Patch,
   UseGuards,
   UseInterceptors,
   Res,
   UploadedFiles,
+  Put,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { SettingsService } from './settings.service';
@@ -25,7 +25,7 @@ import { fileFilter } from './fileFilter';
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
-  @Patch()
+  @Put()
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -40,15 +40,16 @@ export class SettingsController {
   async updateSettings(
     @Body() settings: SettingsDto,
     @GetUser() user: JwtAuthDto,
-    @UploadedFiles()
-    files: { avatar: Express.Multer.File[]; banner: Express.Multer.File[] },
   ): Promise<void> {
-    await this.settingsService.updateSettings(
-      user.userId,
-      settings,
-      files?.banner ? files.banner[0] : null,
-      files?.avatar ? files.avatar[0] : null,
-    );
+    await this.settingsService.updateSettings(user.userId, settings);
+  }
+  @Put('avatar')
+  @UseGuards(AuthGuard('jwt'))
+  async updateAvatar(
+    @GetUser() user: JwtAuthDto,
+    @UploadedFiles() files: { avatar: Express.Multer.File[] },
+  ): Promise<void> {
+    await this.settingsService.updateAvatar(files.avatar[0], user.userId);
   }
 
   @Get()
@@ -64,22 +65,6 @@ export class SettingsController {
   ): Promise<void> {
     response.setHeader('Content-Type', 'image/jpeg');
     const image = await this.settingsService.getAvatar(userId);
-
-    if (!image) {
-      response.status(HttpStatus.NO_CONTENT);
-      response.send();
-      return;
-    }
-    response.send(image);
-  }
-
-  @Get('banner/:id')
-  async getBanner(
-    @Param('id', ParseIntPipe) userId: number,
-    @Res() response: Response,
-  ): Promise<void> {
-    response.setHeader('Content-Type', 'image/jpeg');
-    const image = await this.settingsService.getBanner(userId);
 
     if (!image) {
       response.status(HttpStatus.NO_CONTENT);

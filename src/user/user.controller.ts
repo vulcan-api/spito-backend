@@ -1,6 +1,5 @@
-import { Controller, Param, Get, UseGuards } from '@nestjs/common';
+import { Controller, Param, Get } from '@nestjs/common';
 import { UserService } from './user.service';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('/user')
 export class UserController {

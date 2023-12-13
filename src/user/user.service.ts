@@ -11,10 +11,10 @@ export class UserService {
         where: { id },
         select: {
           username: true,
+          description: true,
         },
       },
     );
-
     return userPublicInformation;
   }
 }
