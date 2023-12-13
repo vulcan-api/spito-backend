@@ -13,7 +13,6 @@ model User {
   username String
   password String
   avatar               Bytes?
-  banner               Bytes?
   description          String?
   Roles    Roles[]
 }
