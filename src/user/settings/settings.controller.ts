@@ -43,7 +43,7 @@ export class SettingsController {
   ): Promise<void> {
     await this.settingsService.updateSettings(user.userId, settings);
   }
-
+  @Put('avatar')
   @UseGuards(AuthGuard('jwt'))
   async updateAvatar(
     @GetUser() user: JwtAuthDto,
