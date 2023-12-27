@@ -4,6 +4,6 @@ import { RulesetController } from './ruleset.controller';
 
 @Module({
   providers: [RulesetService],
-  controllers: [RulesetController]
+  controllers: [RulesetController],
 })
 export class RulesetModule {}
