@@ -27,15 +27,6 @@ export class SettingsController {
 
   @Put()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'avatar', maxCount: 1 },
-        { name: 'banner', maxCount: 1 },
-      ],
-      { fileFilter: fileFilter },
-    ),
-  )
   @UseGuards(AuthGuard('jwt'))
   async updateSettings(
     @Body() settings: SettingsDto,
@@ -44,6 +35,11 @@ export class SettingsController {
     await this.settingsService.updateSettings(user.userId, settings);
   }
   @Put('avatar')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'avatar', maxCount: 1 }], {
+      fileFilter: fileFilter,
+    }),
+  )
   @UseGuards(AuthGuard('jwt'))
   async updateAvatar(
     @GetUser() user: JwtAuthDto,
