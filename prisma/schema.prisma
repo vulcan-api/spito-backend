@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  username String
-  password String
-  avatar               Bytes?
-  description          String?
-  Roles    Roles[]
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  username    String
+  password    String
+  avatar      Bytes?
+  description String?
+  Roles       Roles[]
+  rulesets    Ruleset[]
 }
 
 model Roles {
@@ -22,6 +23,39 @@ model Roles {
   role   Role @default(USER)
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Rule {
+  id        Int      @id @default(autoincrement())
+  name      String
+  path      String
+  rulesetId Int?
+  ruleset   Ruleset? @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
+}
+
+model Ruleset {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  url         String
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rulesetTags RulesetTag[]
+  rules       Rule[]
+}
+
+model Tag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  rulesetTags RulesetTag[]
+}
+
+model RulesetTag {
+  id        Int     @id @default(autoincrement())
+  tagId     Int
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  rulesetId Int
+  ruleset   Ruleset @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
