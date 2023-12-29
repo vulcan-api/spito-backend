@@ -285,6 +285,7 @@ export class RulesetService {
     if (dto.updateRulesList) {
       await this.updateRulesList(rulesetId, userId);
     }
+    await this.updateTags(rulesetId, dto.tags, userId);
     return {
       message: 'Ruleset updated successfully',
       status: 200,
@@ -365,6 +366,61 @@ export class RulesetService {
       } catch (e) {
         console.log(e);
       }
+    }
+  }
+
+  async updateTags(rulesetId: number, tags: string[], userId: number) {
+    const ruleset = await this.getRulesetById(rulesetId);
+    if (!ruleset) {
+      throw new HttpException(
+        {
+          statusCode: 404,
+          message: 'Ruleset not found',
+          error: 'Not Found',
+        },
+        404,
+      );
+    }
+    if (ruleset.user.id !== userId) {
+      throw new HttpException(
+        {
+          statusCode: 403,
+          message: 'You are not allowed to update this ruleset',
+          error: 'Forbidden',
+        },
+        403,
+      );
+    }
+    await this.prisma.rulesetTag.deleteMany({
+      where: {
+        rulesetId,
+      },
+    });
+    for (const tag of tags) {
+      const newTag = await this.prisma.tag.upsert({
+        where: {
+          name: tag,
+        },
+        update: {},
+        create: {
+          name: tag,
+        },
+      });
+
+      await this.prisma.rulesetTag.create({
+        data: {
+          ruleset: {
+            connect: {
+              id: rulesetId,
+            },
+          },
+          tag: {
+            connect: {
+              id: newTag.id,
+            },
+          },
+        },
+      });
     }
   }
 
