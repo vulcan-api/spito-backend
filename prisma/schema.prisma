@@ -31,17 +31,22 @@ model Rule {
   path      String
   rulesetId Int?
   ruleset   Ruleset? @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Ruleset {
   id          Int          @id @default(autoincrement())
   name        String
   description String?
-  url         String
+  url         String      @unique
+  branch      String
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   rulesetTags RulesetTag[]
   rules       Rule[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Tag {
