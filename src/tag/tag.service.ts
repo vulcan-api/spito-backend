@@ -10,7 +10,7 @@ export class TagService {
       where: { name: search },
     });
     const partialMatch = await this.prisma.tag.findMany({
-      where: { name: { contains: search } },
+      where: { name: { startsWith: search } },
       orderBy: { name: 'asc' },
       take: take - (exactMatch ? 1 : 0),
     });
