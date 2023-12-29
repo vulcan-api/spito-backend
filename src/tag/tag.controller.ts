@@ -6,7 +6,7 @@ export class TagController {
   constructor(private readonly tagService: TagService) {}
 
   @Get()
-  async searchTags(@Query('search') search: string) {
-    return await this.tagService.searchTags(search);
+  async searchTags(@Query('search') search: string, @Query('take') take = 10) {
+    return await this.tagService.searchTags(search, take);
   }
 }
