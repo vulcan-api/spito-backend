@@ -14,7 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../auth/decorator/getUser.decorator';
 import { JwtAuthDto } from '../auth/dto';
 import { CreateRulesetDto } from './dto/createRuleset.dto';
-import { UpdateRulesetDto } from './dto/updateRuleset.dto copy';
+import { UpdateRulesetDto } from './dto/updateRuleset.dto';
 
 @Controller('ruleset')
 export class RulesetController {

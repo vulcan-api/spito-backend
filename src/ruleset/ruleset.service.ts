@@ -3,7 +3,7 @@ import { DbService } from '../db/db.service';
 import { CreateRulesetDto } from './dto/createRuleset.dto';
 import { parse } from 'yaml';
 import { Prisma } from '@prisma/client';
-import { UpdateRulesetDto } from './dto/updateRuleset.dto copy';
+import { UpdateRulesetDto } from './dto/updateRuleset.dto';
 
 const RAW_GITHUB_CONTENT_URL = 'https://raw.githubusercontent.com';
 
