@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
   username    String
   password    String
   avatar      Bytes?
   description String?
   Roles       Roles[]
   rulesets    Ruleset[]
+  LikedRules  LikedRules[]
 }
 
 model Roles {
@@ -26,27 +27,28 @@ model Roles {
 }
 
 model Rule {
-  id        Int      @id @default(autoincrement())
-  name      String
-  path      String
-  rulesetId Int?
-  ruleset   Ruleset? @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int          @id @default(autoincrement())
+  name       String
+  path       String
+  rulesetId  Int?
+  ruleset    Ruleset?     @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  LikedRules LikedRules[]
 }
 
 model Ruleset {
   id          Int          @id @default(autoincrement())
   name        String
   description String?
-  url         String      @unique
+  url         String       @unique
   branch      String
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   rulesetTags RulesetTag[]
   rules       Rule[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Tag {
@@ -61,6 +63,18 @@ model RulesetTag {
   tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
   rulesetId Int
   ruleset   Ruleset @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
+}
+
+model LikedRules {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ruleId    Int
+  rule      Rule     @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, ruleId])
 }
 
 enum Role {

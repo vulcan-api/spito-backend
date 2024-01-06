@@ -39,6 +39,17 @@ export class RulesetService {
             },
           },
         },
+        rules: {
+          select: {
+            id: true,
+            name: true,
+            path: true,
+          },
+          take: 10,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
         user: {
           select: {
             id: true,
@@ -57,6 +68,9 @@ export class RulesetService {
         rulesetTags: undefined,
         tags: ruleset.rulesetTags.map((rulesetTag) => {
           return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
+        }),
+        rules: ruleset.rules.map((rule) => {
+          return { id: rule.id, name: rule.name, path: rule.path };
         }),
       };
     });
@@ -81,6 +95,17 @@ export class RulesetService {
             },
           },
         },
+        rules: {
+          select: {
+            id: true,
+            name: true,
+            path: true,
+          },
+          take: 10,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
       where: {
         userId,
@@ -94,6 +119,9 @@ export class RulesetService {
         rulesetTags: undefined,
         tags: ruleset.rulesetTags.map((rulesetTag) => {
           return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
+        }),
+        rules: ruleset.rules.map((rule) => {
+          return { id: rule.id, name: rule.name, path: rule.path };
         }),
       };
     });
