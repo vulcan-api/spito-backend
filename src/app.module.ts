@@ -7,6 +7,13 @@ import { TagModule } from './tag/tag.module';
 import { RuleModule } from './rule/rule.module';
 
 @Module({
-  imports: [AuthModule, DbModule, UserModule, RulesetModule, TagModule, RuleModule],
+  imports: [
+    AuthModule,
+    DbModule,
+    UserModule,
+    RulesetModule,
+    TagModule,
+    RuleModule,
+  ],
 })
 export class AppModule {}
