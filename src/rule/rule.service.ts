@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 export class RuleService {
   constructor(private readonly prisma: DbService) {}
 
-  async getUserRules(userId: number, skip = 0, take = 10) {
+  async getUserRules(userId: number, skip = 0, take = 10, requestedBy: number) {
     const rules: any = await this.prisma.rule.findMany({
       where: { ruleset: { userId } },
       skip,
@@ -16,6 +16,12 @@ export class RuleService {
         where: { ruleId: rule.id },
       });
       rule.likes = likes;
+      if (requestedBy) {
+        const liked = await this.prisma.likedRules.findFirst({
+          where: { ruleId: rule.id, userId: requestedBy },
+        });
+        rule.isLiked = !!liked;
+      }
     }
     return rules;
   }
@@ -42,11 +48,25 @@ export class RuleService {
     }
   }
 
-  async searchRules(search: string, skip = 0, take = 10) {
-    return await this.prisma.rule.findMany({
+  async searchRules(search: string, skip = 0, take = 10, requestedBy: number) {
+    const rules: any = await this.prisma.rule.findMany({
       where: { name: { contains: search } },
       skip,
       take,
     });
+
+    for (const rule of rules) {
+      const likes = await this.prisma.likedRules.count({
+        where: { ruleId: rule.id },
+      });
+      rule.likes = likes;
+      if (requestedBy) {
+        const liked = await this.prisma.likedRules.findFirst({
+          where: { ruleId: rule.id, userId: requestedBy },
+        });
+        rule.isLiked = !!liked;
+      }
+    }
+    return rules;
   }
 }
