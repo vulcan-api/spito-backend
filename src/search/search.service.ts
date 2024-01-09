@@ -8,20 +8,69 @@ export class SearchService {
   async search(query: string, requestedBy?: number) {
     const dataToReturn = {};
     const exactMatch = [];
-    const rules: any = await this.prisma.rule.findMany({
-      where: { name: { contains: query } },
-    });
+    const rulesTransactions = [];
+    const isLikedTransactions = [];
+    const [rules, rulesets, users]: any = await this.prisma.$transaction([
+      this.prisma.rule.findMany({
+        where: { name: { contains: query } },
+      }),
+      this.prisma.ruleset.findMany({
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          url: true,
+          createdAt: true,
+          updatedAt: true,
+          rulesetTags: {
+            select: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        where: {
+          name: { contains: query },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.user.findMany({
+        where: { username: { contains: query } },
+        select: {
+          id: true,
+          username: true,
+        },
+      }),
+    ]);
+
     for (const rule of rules) {
-      const likes = await this.prisma.likedRules.count({
-        where: { ruleId: rule.id },
-      });
-      rule.likes = likes;
+      rulesTransactions.push(
+        this.prisma.likedRules.count({
+          where: { ruleId: rule.id },
+        }),
+      );
       if (requestedBy) {
-        const liked = await this.prisma.likedRules.findFirst({
-          where: { ruleId: rule.id, userId: requestedBy },
-        });
-        rule.isLiked = !!liked;
+        isLikedTransactions.push(
+          this.prisma.likedRules.findFirst({
+            where: { ruleId: rule.id, userId: requestedBy },
+          }),
+        );
       }
+    }
+
+    const rulesResults = await this.prisma.$transaction(rulesTransactions);
+    const isLikedResults = await this.prisma.$transaction(isLikedTransactions);
+    for (const result of rulesResults) {
+      rules[rulesResults.indexOf(result)].likes = result;
+    }
+    for (const result of isLikedResults) {
+      rules[isLikedResults.indexOf(result)].isLiked = result ? true : false;
     }
 
     if (rules.some((rule) => rule.name === query)) {
@@ -33,32 +82,7 @@ export class SearchService {
     } else {
       dataToReturn['rules'] = rules;
     }
-    const rulesets: any = await this.prisma.ruleset.findMany({
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        url: true,
-        createdAt: true,
-        updatedAt: true,
-        rulesetTags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-      where: {
-        name: { contains: query },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+
     for (const ruleset of rulesets) {
       ruleset.tags = ruleset.rulesetTags.map((rulesetTag) => {
         return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
@@ -77,14 +101,6 @@ export class SearchService {
     } else {
       dataToReturn['rulesets'] = rulesets;
     }
-
-    const users = await this.prisma.user.findMany({
-      where: { username: { contains: query } },
-      select: {
-        id: true,
-        username: true,
-      },
-    });
 
     if (users.some((user) => user.username === query)) {
       exactMatch.push({
