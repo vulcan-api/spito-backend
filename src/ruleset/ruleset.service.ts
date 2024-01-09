@@ -11,7 +11,7 @@ const RAW_GITHUB_CONTENT_URL = 'https://raw.githubusercontent.com';
 export class RulesetService {
   constructor(private readonly prisma: DbService) {}
 
-  async getRulesets(search?: string, page = 1, pageSize = 10) {
+  async getRulesets(search?: string, skip = 0, take = 10) {
     const whereParams = {};
 
     if (search) {
@@ -58,8 +58,8 @@ export class RulesetService {
         },
       },
       where: whereParams,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
+      skip,
+      take,
     });
 
     return rulesets.map((ruleset) => {
@@ -76,7 +76,7 @@ export class RulesetService {
     });
   }
 
-  async getUserRulesets(userId: number, page: number, pageSize: number) {
+  async getUserRulesets(userId: number, skip = 0, take = 10) {
     const rulesets = await this.prisma.ruleset.findMany({
       select: {
         id: true,
@@ -110,8 +110,8 @@ export class RulesetService {
       where: {
         userId,
       },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
+      skip,
+      take,
     });
     return rulesets.map((ruleset) => {
       return {

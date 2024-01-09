@@ -16,10 +16,10 @@ export class RuleController {
   @Get('user/:userId')
   async getUserRules(
     @Param('userId') userId: number,
-    @Query('skip') skip: number,
-    @Query('take') take: number,
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
   ) {
-    return await this.ruleService.getUserRules(userId, skip, take);
+    return await this.ruleService.getUserRules(userId, +skip, +take);
   }
   @UseGuards(AuthGuard('jwt'))
   @Get('like/:id')

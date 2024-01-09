@@ -23,19 +23,19 @@ export class RulesetController {
   @Get()
   async getRulesets(
     @Query('search') search: string,
-    @Query('page') page = 1,
-    @Query('pageSize') pageSize = 10,
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
   ) {
-    return await this.rulesetService.getRulesets(search, page, pageSize);
+    return await this.rulesetService.getRulesets(search, +skip, +take);
   }
 
   @Get('user/:userId')
   async getUserRulesets(
     @Param('userId') userId: number,
-    @Query('page') page = 1,
-    @Query('pageSize') pageSize = 10,
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
   ) {
-    return await this.rulesetService.getUserRulesets(userId, page, pageSize);
+    return await this.rulesetService.getUserRulesets(userId, +skip, +take);
   }
 
   @UseGuards(AuthGuard('jwt'))
