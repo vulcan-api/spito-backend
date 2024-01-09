@@ -11,7 +11,12 @@ const RAW_GITHUB_CONTENT_URL = 'https://raw.githubusercontent.com';
 export class RulesetService {
   constructor(private readonly prisma: DbService) {}
 
-  async getRulesets(search?: string, skip = 0, take = 10) {
+  async getRulesets(
+    search?: string,
+    skip = 0,
+    take = 10,
+    requestedBy?: number,
+  ) {
     const whereParams = {};
 
     if (search) {
@@ -21,7 +26,7 @@ export class RulesetService {
       ];
     }
 
-    const rulesets = await this.prisma.ruleset.findMany({
+    const rulesets: any = await this.prisma.ruleset.findMany({
       select: {
         id: true,
         name: true,
@@ -62,22 +67,25 @@ export class RulesetService {
       take,
     });
 
-    return rulesets.map((ruleset) => {
-      return {
-        ...ruleset,
-        rulesetTags: undefined,
-        tags: ruleset.rulesetTags.map((rulesetTag) => {
-          return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
-        }),
-        rules: ruleset.rules.map((rule) => {
-          return { id: rule.id, name: rule.name, path: rule.path };
-        }),
-      };
-    });
+    for (const ruleset of rulesets) {
+      const rules = await this.assignLikesToRules(ruleset.rules, requestedBy);
+      ruleset.rules = rules;
+      ruleset.tags = ruleset.rulesetTags.map((rulesetTag) => {
+        return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
+      });
+      ruleset.rulesetTags = undefined;
+    }
+
+    return rulesets;
   }
 
-  async getUserRulesets(userId: number, skip = 0, take = 10) {
-    const rulesets = await this.prisma.ruleset.findMany({
+  async getUserRulesets(
+    userId: number,
+    skip = 0,
+    take = 10,
+    requestedBy?: number,
+  ) {
+    const rulesets: any = await this.prisma.ruleset.findMany({
       select: {
         id: true,
         name: true,
@@ -100,6 +108,7 @@ export class RulesetService {
             id: true,
             name: true,
             path: true,
+            createdAt: true,
           },
           take: 10,
           orderBy: {
@@ -113,18 +122,17 @@ export class RulesetService {
       skip,
       take,
     });
-    return rulesets.map((ruleset) => {
-      return {
-        ...ruleset,
-        rulesetTags: undefined,
-        tags: ruleset.rulesetTags.map((rulesetTag) => {
-          return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
-        }),
-        rules: ruleset.rules.map((rule) => {
-          return { id: rule.id, name: rule.name, path: rule.path };
-        }),
-      };
-    });
+
+    for (const ruleset of rulesets) {
+      const rules = await this.assignLikesToRules(ruleset.rules, requestedBy);
+      ruleset.rules = rules;
+      ruleset.tags = ruleset.rulesetTags.map((rulesetTag) => {
+        return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
+      });
+      ruleset.rulesetTags = undefined;
+    }
+
+    return rulesets;
   }
 
   async createRuleset(dto: CreateRulesetDto, userId: number) {
@@ -229,7 +237,7 @@ export class RulesetService {
     };
   }
 
-  async getRulesetById(id: number) {
+  async getRulesetById(id: number, requestedBy?: number) {
     const ruleset = await this.prisma.ruleset.findUnique({
       where: {
         id,
@@ -267,12 +275,15 @@ export class RulesetService {
         },
       },
     });
+
+    const rules = await this.assignLikesToRules(ruleset.rules, requestedBy);
     return {
       ...ruleset,
       rulesetTags: undefined,
       tags: ruleset.rulesetTags.map((rulesetTag) => {
         return { id: rulesetTag.tag.id, name: rulesetTag.tag.name };
       }),
+      rules,
     };
   }
 
@@ -491,5 +502,23 @@ export class RulesetService {
     }
     const urlParts = url.split('/');
     return urlParts[urlParts.length - 2] + '/' + urlParts[urlParts.length - 1];
+  }
+
+  private async assignLikesToRules(rules: any, requestedBy: number) {
+    const rulesWithLikes = [];
+    for (const rule of rules) {
+      const likes = await this.prisma.likedRules.count({
+        where: { ruleId: rule.id },
+      });
+      rule.likes = likes;
+      if (requestedBy) {
+        const liked = await this.prisma.likedRules.findFirst({
+          where: { ruleId: rule.id, userId: requestedBy },
+        });
+        rule.isLiked = !!liked;
+      }
+      rulesWithLikes.push(rule);
+    }
+    return rulesWithLikes;
   }
 }
