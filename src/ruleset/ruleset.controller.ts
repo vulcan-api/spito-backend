@@ -15,27 +15,42 @@ import { GetUser } from '../auth/decorator/getUser.decorator';
 import { JwtAuthDto } from '../auth/dto';
 import { CreateRulesetDto } from './dto/createRuleset.dto';
 import { UpdateRulesetDto } from './dto/updateRuleset.dto';
+import { OptionalJwtAuthGuard } from '../auth/guards/optionalJwtAuth.guard';
 
 @Controller('ruleset')
 export class RulesetController {
   constructor(private readonly rulesetService: RulesetService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   async getRulesets(
     @Query('search') search: string,
     @Query('skip') skip = 0,
     @Query('take') take = 10,
+    @GetUser() user: JwtAuthDto,
   ) {
-    return await this.rulesetService.getRulesets(search, +skip, +take);
+    return await this.rulesetService.getRulesets(
+      search,
+      +skip,
+      +take,
+      user.userId,
+    );
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('user/:userId')
   async getUserRulesets(
     @Param('userId') userId: number,
     @Query('skip') skip = 0,
     @Query('take') take = 10,
+    @GetUser() user: JwtAuthDto,
   ) {
-    return await this.rulesetService.getUserRulesets(userId, +skip, +take);
+    return await this.rulesetService.getUserRulesets(
+      userId,
+      +skip,
+      +take,
+      user.userId,
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -47,9 +62,10 @@ export class RulesetController {
     return await this.rulesetService.createRuleset(dto, user.userId);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
-  async getRuleset(@Param('id') id: number) {
-    return await this.rulesetService.getRulesetById(id);
+  async getRuleset(@Param('id') id: number, @GetUser() user: JwtAuthDto) {
+    return await this.rulesetService.getRulesetById(id, user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'))
