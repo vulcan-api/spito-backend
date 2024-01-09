@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { JwtAuthDto, LoginDto, RegisterDto } from './dto';
 import { DbService } from '../db/db.service';
 import { sha512 } from 'js-sha512';
@@ -26,17 +26,18 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<object> {
-    const user = await this.prisma.user.findUniqueOrThrow({
+    const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
+
+    if (!user || (user && !(sha512(dto.password) === user.password))) {
+      throw new HttpException('Wrong credentials!', 403);
+    }
 
     const roles = await this.prisma.roles.findMany({
       where: { userId: user.id },
       select: { role: true },
     });
-
-    if (!user || !(sha512(dto.password) === user.password))
-      throw new ForbiddenException('Wrong credentials!');
 
     const jwt = await this.generateAuthJwt({
       userId: user.id,
