@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { RulesetModule } from './ruleset/ruleset.module';
 import { TagModule } from './tag/tag.module';
 import { RuleModule } from './rule/rule.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RuleModule } from './rule/rule.module';
     RulesetModule,
     TagModule,
     RuleModule,
+    SearchModule,
   ],
 })
 export class AppModule {}
