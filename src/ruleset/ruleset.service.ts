@@ -1,11 +1,9 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { CreateRulesetDto } from './dto/createRuleset.dto';
-import { parse } from 'yaml';
 import { Prisma } from '@prisma/client';
 import { UpdateRulesetDto } from './dto/updateRuleset.dto';
-
-const RAW_GITHUB_CONTENT_URL = 'https://raw.githubusercontent.com';
+import { PublishRulesDto } from './dto/publishRules.dto';
 
 @Injectable()
 export class RulesetService {
@@ -137,34 +135,14 @@ export class RulesetService {
 
   async createRuleset(dto: CreateRulesetDto, userId: number) {
     const extractedRepoNameAndOwner = this.extractRepoName(dto.url);
-    const rulesetYmlileUrl = `${RAW_GITHUB_CONTENT_URL}/${extractedRepoNameAndOwner}/${dto.branch}/spito-rules.yml`;
-    const rulesetYamlFileUrl = `${RAW_GITHUB_CONTENT_URL}/${extractedRepoNameAndOwner}/${dto.branch}/spito-rules.yaml`;
-    const rulesetYmlFileRes = await fetch(rulesetYmlileUrl);
-    const rulesetYamlFileRes = await fetch(rulesetYamlFileUrl);
-    if (!rulesetYmlFileRes.ok && !rulesetYamlFileRes.ok) {
-      throw new HttpException(
-        {
-          statusCode: 404,
-          message: 'Ruleset info file not found',
-          error: 'Not Found',
-        },
-        404,
-      );
-    }
-    let rulesetInfoFile = '';
-    if (rulesetYmlFileRes.ok) {
-      rulesetInfoFile = await rulesetYmlFileRes.text();
-    } else {
-      rulesetInfoFile = await rulesetYamlFileRes.text();
-    }
-    const parsedRulesetInfoFile = parse(rulesetInfoFile);
+    const normalizedUrl = this.normalizeUrl(dto.url);
     let rulesetId = 0;
     try {
       const ruleset = await this.prisma.ruleset.create({
         data: {
-          name: parsedRulesetInfoFile.identifier,
+          name: extractedRepoNameAndOwner,
           description: dto.description,
-          url: dto.url,
+          url: normalizedUrl,
           branch: dto.branch,
           user: {
             connect: {
@@ -186,23 +164,6 @@ export class RulesetService {
             409,
           );
         }
-      }
-    }
-    for (const [name, path] of Object.entries(parsedRulesetInfoFile.rules)) {
-      try {
-        await this.prisma.rule.create({
-          data: {
-            name,
-            path: path as string,
-            ruleset: {
-              connect: {
-                id: rulesetId,
-              },
-            },
-          },
-        });
-      } catch (e) {
-        console.log(e);
       }
     }
     for (const tag of dto.tags) {
@@ -321,9 +282,6 @@ export class RulesetService {
         description: dto.description,
       },
     });
-    if (dto.updateRulesList) {
-      await this.updateRulesList(rulesetId, userId);
-    }
     await this.updateTags(rulesetId, dto.tags, userId);
     return {
       message: 'Ruleset updated successfully',
@@ -331,12 +289,15 @@ export class RulesetService {
     };
   }
 
-  async updateRulesList(
-    rulesetId: number,
-    userId: number,
-    isNewRuleset = false,
-  ) {
-    const ruleset = await this.getRulesetById(rulesetId);
+  async publishRules(dto: PublishRulesDto, userId: number) {
+    const url = this.normalizeUrl(dto.url);
+    const ruleset = await this.prisma.ruleset.findUnique({
+      where: {
+        url: url,
+        userId,
+      },
+    });
+
     if (!ruleset) {
       throw new HttpException(
         {
@@ -347,65 +308,23 @@ export class RulesetService {
         404,
       );
     }
-    if (ruleset.user.id !== userId) {
-      throw new HttpException(
-        {
-          statusCode: 403,
-          message: 'You are not allowed to update this ruleset',
-          error: 'Forbidden',
-        },
-        403,
-      );
-    }
-    if (!isNewRuleset) {
-      await this.prisma.rule.deleteMany({
-        where: {
-          rulesetId,
-        },
-      });
-    }
-    const extractedRepoNameAndOwner = this.extractRepoName(ruleset.url);
-    const rulesetYmlileUrl = `${RAW_GITHUB_CONTENT_URL}/${extractedRepoNameAndOwner}/${ruleset.branch}/spito-rules.yml`;
-    const rulesetYamlFileUrl = `${RAW_GITHUB_CONTENT_URL}/${extractedRepoNameAndOwner}/${ruleset.branch}/spito-rules.yaml`;
-    const rulesetYmlFileRes = await fetch(rulesetYmlileUrl);
-    const rulesetYamlFileRes = await fetch(rulesetYamlFileUrl);
-    if (!rulesetYmlFileRes.ok && !rulesetYamlFileRes.ok) {
-      throw new HttpException(
-        {
-          statusCode: 404,
-          message: 'Ruleset info file not found',
-          error: 'Not Found',
-        },
-        404,
-      );
-    }
-    let rulesetInfoFile = '';
-    if (rulesetYmlFileRes.ok) {
-      rulesetInfoFile = await rulesetYmlFileRes.text();
-    } else {
-      rulesetInfoFile = await rulesetYamlFileRes.text();
-    }
-    await this.prisma.ruleset.update({
+
+    await this.prisma.rule.deleteMany({
       where: {
-        id: rulesetId,
-      },
-      data: {
-        name: parse(rulesetInfoFile).identifier,
+        rulesetId: ruleset.id,
       },
     });
-    const parsedRulesetInfoFile = parse(rulesetInfoFile);
-    for (const [name, path] of Object.entries(parsedRulesetInfoFile.rules)) {
-      try {
-        await this.prisma.rule.create({
-          data: {
-            name,
-            path: path as string,
-          },
-        });
-      } catch (e) {
-        console.log(e);
-      }
-    }
+
+    await this.prisma.rule.createMany({
+      data: dto.rules.map((rule) => {
+        return {
+          name: rule.name,
+          description: rule.description,
+          path: rule.path,
+          rulesetId: ruleset.id,
+        };
+      }),
+    });
   }
 
   async updateTags(rulesetId: number, tags: string[], userId: number) {
@@ -502,6 +421,15 @@ export class RulesetService {
     }
     const urlParts = url.split('/');
     return urlParts[urlParts.length - 2] + '/' + urlParts[urlParts.length - 1];
+  }
+
+  private normalizeUrl(url: string) {
+    if (url.endsWith('.git')) {
+      url = url.substring(0, url.length - 4);
+    }
+    url = url.replace(/\/$/, '');
+    url = url.replace(/(^\w+:|^)\/\//, '');
+    return url;
   }
 
   private async assignLikesToRules(rules: any, requestedBy: number) {

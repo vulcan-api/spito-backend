@@ -27,14 +27,16 @@ model Roles {
 }
 
 model Rule {
-  id         Int          @id @default(autoincrement())
-  name       String
-  path       String
-  rulesetId  Int?
-  ruleset    Ruleset?     @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  LikedRules LikedRules[]
+  id          Int          @id @default(autoincrement())
+  name        String
+  path        String
+  description String?
+  unsafe      Boolean      @default(false)
+  rulesetId   Int?
+  ruleset     Ruleset?     @relation(fields: [rulesetId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  LikedRules  LikedRules[]
 }
 
 model Ruleset {
