@@ -8,10 +8,6 @@ import {
 
 export class CreateRulesetDto {
   @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @IsString()
   @IsOptional()
   description: string;
 

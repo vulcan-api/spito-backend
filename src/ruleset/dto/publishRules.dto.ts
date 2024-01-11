@@ -9,8 +9,16 @@ export class PublishRulesDto {
   rules: Rule[];
 }
 
-interface Rule {
+class Rule {
+  @IsString()
+  @IsNotEmpty()
   name: string;
+
+  @IsString()
+  @IsNotEmpty()
   description: string;
+
+  @IsString()
+  @IsNotEmpty()
   path: string;
 }
