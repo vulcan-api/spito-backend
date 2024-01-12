@@ -8,6 +8,17 @@ import * as crypto from 'crypto';
 export class TokenService {
   constructor(private readonly prisma: DbService) {}
 
+  async getUsersTokens(userId: number) {
+    return this.prisma.token.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        expiresAt: true,
+      },
+    });
+  }
+
   async createToken(userId: number, dto: CreateTokenDto) {
     const token = crypto.randomBytes(32).toString('hex');
     await this.prisma.token.create({
@@ -21,6 +32,7 @@ export class TokenService {
       token,
     };
   }
+
   async verifyToken(token: string) {
     const tokenFromDb = await this.prisma.token.findUnique({
       where: { token: sha512(token) },
@@ -42,5 +54,11 @@ export class TokenService {
       return null;
     }
     return tokenFromDb.userId;
+  }
+
+  async deleteToken(id: number, userId: number) {
+    return this.prisma.token.delete({
+      where: { id, userId },
+    });
   }
 }
