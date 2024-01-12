@@ -23,6 +23,7 @@ model User {
 model Token {
   id        Int      @id @default(autoincrement())
   token     String   @unique
+  name      String   @default("token")
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime?
