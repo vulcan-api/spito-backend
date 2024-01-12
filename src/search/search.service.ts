@@ -13,6 +13,19 @@ export class SearchService {
     const [rules, rulesets, users]: any = await this.prisma.$transaction([
       this.prisma.rule.findMany({
         where: { name: { contains: query } },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          ruleset: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       }),
       this.prisma.ruleset.findMany({
         select: {
