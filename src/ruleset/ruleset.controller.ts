@@ -68,6 +68,13 @@ export class RulesetController {
     return await this.rulesetService.getRulesetById(id, user.userId);
   }
 
+  //TODO: Replace this with token
+  @UseGuards(AuthGuard('jwt'))
+  @Post('publish')
+  async publishRules(@Body() dto: any, @GetUser() user: JwtAuthDto) {
+    return await this.rulesetService.publishRules(dto, user.userId);
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   async updateRuleset(
