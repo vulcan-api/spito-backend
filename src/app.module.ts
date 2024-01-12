@@ -6,6 +6,7 @@ import { RulesetModule } from './ruleset/ruleset.module';
 import { TagModule } from './tag/tag.module';
 import { RuleModule } from './rule/rule.module';
 import { SearchModule } from './search/search.module';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SearchModule } from './search/search.module';
     TagModule,
     RuleModule,
     SearchModule,
+    TokenModule,
   ],
 })
 export class AppModule {}

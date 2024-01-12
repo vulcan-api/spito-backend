@@ -16,6 +16,8 @@ import { JwtAuthDto } from '../auth/dto';
 import { CreateRulesetDto } from './dto/createRuleset.dto';
 import { UpdateRulesetDto } from './dto/updateRuleset.dto';
 import { OptionalJwtAuthGuard } from '../auth/guards/optionalJwtAuth.guard';
+import { TokenGuard } from '../auth/guards/token.guard';
+import { GetToken } from '../auth/decorator/getToken.decorator';
 
 @Controller('ruleset')
 export class RulesetController {
@@ -68,11 +70,10 @@ export class RulesetController {
     return await this.rulesetService.getRulesetById(id, user.userId);
   }
 
-  //TODO: Replace this with token
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(TokenGuard)
   @Post('publish')
-  async publishRules(@Body() dto: any, @GetUser() user: JwtAuthDto) {
-    return await this.rulesetService.publishRules(dto, user.userId);
+  async publishRules(@Body() dto: any, @GetToken() token: string) {
+    return await this.rulesetService.publishRules(dto, token);
   }
 
   @UseGuards(AuthGuard('jwt'))

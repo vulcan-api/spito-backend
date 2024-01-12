@@ -4,6 +4,7 @@ import { CreateRulesetDto } from './dto/createRuleset.dto';
 import { Prisma } from '@prisma/client';
 import { UpdateRulesetDto } from './dto/updateRuleset.dto';
 import { PublishRulesDto } from './dto/publishRules.dto';
+import { sha512 } from 'js-sha512';
 
 @Injectable()
 export class RulesetService {
@@ -222,6 +223,9 @@ export class RulesetService {
             id: true,
             name: true,
             path: true,
+            unsafe: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
         rulesetTags: {
@@ -289,15 +293,19 @@ export class RulesetService {
     };
   }
 
-  async publishRules(dto: PublishRulesDto, userId: number) {
+  async publishRules(dto: PublishRulesDto, token: string) {
+    const tokenFromDb = await this.prisma.token.findUnique({
+      where: {
+        token: sha512(token).toString(),
+      },
+    });
     const url = this.normalizeUrl(dto.url);
     const ruleset = await this.prisma.ruleset.findUnique({
       where: {
         url: url,
-        userId,
+        userId: tokenFromDb.userId,
       },
     });
-
     if (!ruleset) {
       throw new HttpException(
         {
