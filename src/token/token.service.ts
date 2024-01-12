@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { CreateTokenDto } from './dto/createToken.dto';
 import { sha512 } from 'js-sha512';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TokenService {
   constructor(private readonly prisma: DbService) {}
 
   async createToken(userId: number, dto: CreateTokenDto) {
-    const token = sha512(Math.random().toString());
+    const token = crypto.randomBytes(32).toString('hex');
     await this.prisma.token.create({
       data: {
         userId,
