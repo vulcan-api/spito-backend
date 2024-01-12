@@ -222,6 +222,8 @@ export class RulesetService {
             id: true,
             name: true,
             path: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
         rulesetTags: {
