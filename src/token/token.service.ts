@@ -15,6 +15,8 @@ export class TokenService {
         id: true,
         name: true,
         expiresAt: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
@@ -24,6 +26,7 @@ export class TokenService {
     await this.prisma.token.create({
       data: {
         userId,
+        name: dto.name,
         token: sha512(token).toString(),
         expiresAt: dto.expiresAt,
       },
