@@ -32,7 +32,7 @@ export class TokenController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  async deleteToken(@GetUser() user: JwtAuthDto, @Param() id: number) {
+  async deleteToken(@GetUser() user: JwtAuthDto, @Param('id') id: number) {
     return await this.tokenService.deleteToken(+id, user.userId);
   }
 }
