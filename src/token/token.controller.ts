@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   UseGuards,
@@ -28,6 +30,7 @@ export class TokenController {
     return await this.tokenService.getUsersTokens(user.userId);
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
   async deleteToken(@GetUser() user: JwtAuthDto, @Param() id: number) {
     return await this.tokenService.deleteToken(+id, user.userId);
