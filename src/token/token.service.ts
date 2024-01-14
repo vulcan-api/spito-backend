@@ -36,7 +36,7 @@ export class TokenService {
     };
   }
 
-  async verifyToken(token: string) {
+  async internalVerifyToken(token: string) {
     const tokenFromDb = await this.prisma.token.findUnique({
       where: { token: sha512(token) },
     });
@@ -50,6 +50,34 @@ export class TokenService {
       return false;
     }
     return true;
+  }
+
+  async verifyToken(token: string) {
+    const tokenFromDb = await this.prisma.token.findUnique({
+      where: { token: sha512(token) },
+    });
+    if (!tokenFromDb) {
+      return {
+        valid: false,
+        message: 'Token not found',
+        expiresAt: null,
+      };
+    }
+    if (tokenFromDb.expiresAt < new Date()) {
+      await this.prisma.token.delete({
+        where: { token: sha512(token) },
+      });
+      return {
+        valid: false,
+        message: 'Token expired',
+        expiresAt: tokenFromDb.expiresAt,
+      };
+    }
+    return {
+      valid: true,
+      message: 'Token valid',
+      expiresAt: tokenFromDb.expiresAt,
+    };
   }
 
   async getUserIdByToken(token: string) {

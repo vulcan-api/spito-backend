@@ -12,7 +12,7 @@ export class TokenGuard implements CanActivate {
     }
     const token = req.headers.authorization.split(' ')[1];
 
-    const isValid = await this.tokenService.verifyToken(token);
+    const isValid = await this.tokenService.internalVerifyToken(token);
     return isValid;
   }
 }
