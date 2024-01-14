@@ -40,7 +40,13 @@ export class TokenService {
     const tokenFromDb = await this.prisma.token.findUnique({
       where: { token: sha512(token) },
     });
-    if (!tokenFromDb || tokenFromDb.expiresAt < new Date()) {
+    if (!tokenFromDb) {
+      return false;
+    }
+    if (tokenFromDb.expiresAt < new Date()) {
+      await this.prisma.token.delete({
+        where: { token: sha512(token) },
+      });
       return false;
     }
     return true;
