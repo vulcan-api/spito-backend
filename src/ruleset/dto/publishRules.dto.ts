@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class PublishRulesDto {
   @IsString()
@@ -21,4 +21,7 @@ class Rule {
   @IsString()
   @IsNotEmpty()
   path: string;
+
+  @IsBoolean()
+  unsafe: boolean;
 }

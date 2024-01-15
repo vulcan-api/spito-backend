@@ -329,6 +329,7 @@ export class RulesetService {
           name: rule.name,
           description: rule.description,
           path: rule.path,
+          unsafe: rule.unsafe,
           rulesetId: ruleset.id,
         };
       }),
