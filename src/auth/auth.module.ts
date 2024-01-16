@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginModule } from './login/login.module';
+import { TotpService } from './totp/totp.service';
+import { TotpController } from './totp/totp.controller';
 
 const { SECRET: secret = 'secret', EXPIRES_IN: expiresIn = 3600 * 24 } =
   process.env;
@@ -21,8 +23,8 @@ const { SECRET: secret = 'secret', EXPIRES_IN: expiresIn = 3600 * 24 } =
     }),
     LoginModule,
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtStrategy, PassportModule],
+  controllers: [AuthController, TotpController],
+  providers: [AuthService, JwtStrategy, TotpService],
+  exports: [AuthService, JwtStrategy, PassportModule, TotpService],
 })
 export class AuthModule {}

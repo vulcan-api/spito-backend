@@ -34,19 +34,25 @@ export class AuthService {
       throw new HttpException('Wrong credentials!', 403);
     }
 
-    const roles = await this.prisma.roles.findMany({
-      where: { userId: user.id },
-      select: { role: true },
-    });
+    if (user.totpSecret === null) {
+      const roles = await this.prisma.roles.findMany({
+        where: { userId: user.id },
+        select: { role: true },
+      });
 
-    const jwt = await this.generateAuthJwt({
-      userId: user.id,
-      roles: roles.map((role) => role.role),
-    });
+      const jwt = await this.generateAuthJwt({
+        userId: user.id,
+        roles: roles.map((role) => role.role),
+      });
+
+      return {
+        token: jwt,
+        userInfo: await this.getUserPublicInfo(dto.email),
+      };
+    }
 
     return {
-      token: jwt,
-      userInfo: await this.getUserPublicInfo(dto.email),
+      is2FAEnabled: true,
     };
   }
 
