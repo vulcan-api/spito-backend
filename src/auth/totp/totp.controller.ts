@@ -22,6 +22,7 @@ export class TotpController {
     private readonly totpService: TotpService,
     private readonly authService: AuthService,
   ) {}
+
   @UseGuards(AuthGuard('jwt'))
   @Get('code')
   async getQrCodeUrl(): Promise<{ url: string | undefined }> {
@@ -41,11 +42,11 @@ export class TotpController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
   @Patch('confirm')
-  async confirmTotpCode(
+  async enableTotpCode(
     @Body() dto: ConfirmTotpDto,
     @GetUser() user: JwtAuthDto,
   ): Promise<void> {
-    await this.totpService.confirm(user.userId, dto.secret, dto.code);
+    await this.totpService.enable(user.userId, dto.secret, dto.code);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -57,6 +58,7 @@ export class TotpController {
       is2faEnabled: await this.totpService.is2faEnabled(user.userId),
     };
   }
+
   @UseGuards(AuthGuard('jwt'))
   @Patch('remove')
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -52,6 +52,7 @@ export class TotpService {
       roles: user.Roles.map((role) => role.role),
     });
   }
+
   async is2faEnabled(userId: number): Promise<boolean> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: {
@@ -60,6 +61,7 @@ export class TotpService {
     });
     return !!user.totpSecret;
   }
+
   async remove2FA(userId: number) {
     await this.prisma.user.update({
       where: {
@@ -71,7 +73,7 @@ export class TotpService {
     });
   }
 
-  async confirm(userId: number, secret: string, code: string) {
+  async enable(userId: number, secret: string, code: string) {
     if (
       !speakeasy.totp.verify({
         secret: secret,
