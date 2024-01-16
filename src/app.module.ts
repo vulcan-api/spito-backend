@@ -7,6 +7,7 @@ import { TagModule } from './tag/tag.module';
 import { RuleModule } from './rule/rule.module';
 import { SearchModule } from './search/search.module';
 import { TokenModule } from './token/token.module';
+import { EnvironmentModule } from './environment/enviroment.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TokenModule } from './token/token.module';
     RuleModule,
     SearchModule,
     TokenModule,
+    EnvironmentModule,
   ],
 })
 export class AppModule {}
