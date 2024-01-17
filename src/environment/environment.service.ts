@@ -247,7 +247,6 @@ export class EnvironmentService {
       where: { id, userId },
     });
   }
-
   private async assignLikesToEnviroment(
     environmentId: number,
     requestedBy?: number,

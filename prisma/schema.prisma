@@ -118,6 +118,8 @@ model EnvironmentRules {
   rule          Rule        @relation(fields: [ruleId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@unique([environmentId, ruleId])
 }
 
 model LikedEnvironment {
