@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
-import { IsTakenDto } from './dto';
+import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
+import { IsTakenDto, JwtAuthDto } from './dto';
 import { AuthService } from './auth.service';
+import { ChangePasswordDto } from './dto/changePassword.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from './decorator/getUser.decorator';
 
 @Controller('/auth')
 export class AuthController {
@@ -12,10 +14,12 @@ export class AuthController {
     return this.authService.isTaken(dto.username, dto.email);
   }
 
-  @Post('logout')
-  async logout(@Res() res: Response) {
-    res.clearCookie('jwt');
-    res.clearCookie('user_info');
-    res.send({ statusCode: true, message: 'Succesfully logged out' });
+  @UseGuards(AuthGuard('jwt'))
+  @Put('password/change')
+  async changePassword(
+    @Body() data: ChangePasswordDto,
+    @GetUser() user: JwtAuthDto,
+  ) {
+    return await this.authService.changePassword(data, user.userId);
   }
 }

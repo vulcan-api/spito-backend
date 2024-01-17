@@ -3,6 +3,7 @@ import { JwtAuthDto, LoginDto, RegisterDto } from './dto';
 import { DbService } from '../db/db.service';
 import { sha512 } from 'js-sha512';
 import { JwtService } from '@nestjs/jwt';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 
 @Injectable()
 export class AuthService {
@@ -90,5 +91,25 @@ export class AuthService {
     });
     userPublicInfo.roles = roles.map((role) => role.role);
     return userPublicInfo;
+  }
+
+  async changePassword(data: ChangePasswordDto, userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found!', 404);
+    }
+    if (user.password !== sha512(data.currentPassword)) {
+      throw new HttpException('Wrong password!', 403);
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: sha512(data.newPassword),
+      },
+    });
   }
 }
