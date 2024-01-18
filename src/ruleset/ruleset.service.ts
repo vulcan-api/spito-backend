@@ -144,7 +144,6 @@ export class RulesetService {
           name: extractedRepoNameAndOwner,
           description: dto.description,
           url: normalizedUrl,
-          branch: dto.branch,
           user: {
             connect: {
               id: userId,
@@ -316,6 +315,14 @@ export class RulesetService {
         404,
       );
     }
+    await this.prisma.ruleset.update({
+      where: {
+        id: ruleset.id,
+      },
+      data: {
+        branch: dto.branch,
+      },
+    });
 
     await this.prisma.rule.deleteMany({
       where: {

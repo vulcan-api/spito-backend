@@ -5,6 +5,10 @@ export class PublishRulesDto {
   @IsNotEmpty()
   url: string;
 
+  @IsString()
+  @IsNotEmpty()
+  branch: string;
+
   @IsArray()
   rules: Rule[];
 }

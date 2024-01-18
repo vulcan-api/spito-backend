@@ -16,10 +16,6 @@ export class CreateRulesetDto {
   @IsUrl()
   url: string;
 
-  @IsString()
-  @IsNotEmpty()
-  branch: string;
-
   @IsArray()
   tags: string[];
 }
