@@ -288,6 +288,39 @@ export class EnvironmentService {
     };
   }
 
+  async likeOrDislikeEnvironment(environmentId: number, userId: number) {
+    const environment = await this.prisma.environment.findUnique({
+      where: { id: environmentId },
+    });
+
+    if (!environment) {
+      throw new HttpException('Environment not found', 404);
+    }
+
+    const liked = await this.prisma.likedEnvironment.findFirst({
+      where: { environmentId, userId },
+    });
+
+    if (liked) {
+      await this.prisma.likedEnvironment.delete({
+        where: { id: liked.id },
+      });
+      return {
+        message: 'Environment disliked',
+      };
+    }
+
+    await this.prisma.likedEnvironment.create({
+      data: {
+        environmentId,
+        userId,
+      },
+    });
+    return {
+      message: 'Environment liked',
+    };
+  }
+
   async deleteEnvironment(id: number, userId: number) {
     return await this.prisma.environment.delete({
       where: { id, userId },
