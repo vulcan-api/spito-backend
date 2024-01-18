@@ -1,5 +1,5 @@
 import { DbService } from '../db/db.service';
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { EnvironmentDto } from './dto/enviroment.dto';
 
 @Injectable()
@@ -242,12 +242,40 @@ export class EnvironmentService {
     });
   }
 
+  async addRuleToEnvironment(
+    environmentId: number,
+    ruleId: number,
+    userId: number,
+  ) {
+    const environment = await this.prisma.environment.findUnique({
+      where: { id: environmentId },
+    });
+
+    if (environment.userId !== userId) {
+      throw new HttpException('You are not owner of this environment', 403);
+    }
+    try {
+      await this.prisma.environmentRules.create({
+        data: {
+          environmentId,
+          ruleId,
+        },
+      });
+    } catch (e) {
+      if (e.code === 'P2002') {
+        throw new HttpException('Rule already added to this environment', 409);
+      }
+    }
+    return {
+      message: 'Rule added to environment',
+    };
+  }
+
   async deleteEnvironment(id: number, userId: number) {
     return await this.prisma.environment.delete({
       where: { id, userId },
     });
   }
-
   private async assignLikesToEnviroment(
     environmentId: number,
     requestedBy?: number,
