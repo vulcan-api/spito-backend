@@ -102,6 +102,12 @@ export class RulesetService {
             },
           },
         },
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
         rules: {
           select: {
             id: true,

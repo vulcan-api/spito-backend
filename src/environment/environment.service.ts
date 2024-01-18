@@ -94,6 +94,7 @@ export class EnvironmentService {
         id: true,
         name: true,
         description: true,
+        isPrivate: true,
         createdAt: true,
         updatedAt: true,
         user: {
@@ -168,6 +169,7 @@ export class EnvironmentService {
         id: true,
         name: true,
         description: true,
+        isPrivate: true,
         createdAt: true,
         updatedAt: true,
         user: {
