@@ -88,6 +88,7 @@ export class EnvironmentController {
     );
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Put(':id')
   async updateEnvironment(
     @Param('id') id: number,
@@ -101,6 +102,7 @@ export class EnvironmentController {
     );
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   async deleteEnvironment(
     @Param('id') id: number,
