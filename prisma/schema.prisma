@@ -101,6 +101,7 @@ model Environment {
   name              String
   description       String?
   logo              Bytes?
+  isPrivate         Boolean            @default(false)
   userId            Int
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   EnvironmentRules  EnvironmentRules[]

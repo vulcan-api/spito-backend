@@ -1,4 +1,10 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class EnvironmentDto {
   @IsString()
@@ -11,4 +17,7 @@ export class EnvironmentDto {
 
   @IsArray()
   tags: string[];
+
+  @IsBoolean()
+  isPrivate: boolean;
 }
