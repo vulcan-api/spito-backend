@@ -16,6 +16,7 @@ export class EnvironmentService {
         description: true,
         createdAt: true,
         updatedAt: true,
+        isPrivate: true,
         user: {
           select: {
             id: true,
@@ -62,23 +63,28 @@ export class EnvironmentService {
         ? true
         : false;
     }
+    const environmentsToReturn = [];
 
-    for (const enviroment of environments) {
-      enviroment.tags = enviroment.EnvironmentTags.map((enviromentTag) => {
+    for (const environment of environments) {
+      environment.tags = environment.EnvironmentTags.map((enviromentTag) => {
         return {
           id: enviromentTag.tag.id,
           name: enviromentTag.tag.name,
         };
       });
-      enviroment.EnvironmentTags = undefined;
+      environment.EnvironmentTags = undefined;
       const { likes, isLiked } = await this.assignLikesToEnviroment(
-        enviroment.id,
+        environment.id,
         requestedBy,
       );
-      enviroment.likes = likes;
-      enviroment.isLiked = isLiked;
+      environment.likes = likes;
+      environment.isLiked = isLiked;
+      if (environment.isPrivate && environment.user.id !== requestedBy) {
+        continue;
+      }
+      environmentsToReturn.push(environment);
     }
-    return environments;
+    return environmentsToReturn;
   }
 
   async getEnvironmentById(id: number, requestedBy?: number) {
@@ -122,6 +128,12 @@ export class EnvironmentService {
         },
       },
     });
+    if (
+      !environment ||
+      (environment.isPrivate && environment.user.id !== requestedBy)
+    ) {
+      throw new HttpException('Environment not found', 404);
+    }
     environment.tags = environment.EnvironmentTags.map((tag) => {
       return {
         id: tag.tag.id,
@@ -176,6 +188,7 @@ export class EnvironmentService {
         },
       },
     });
+    const environmentsToReturn = [];
     for (const environment of environments) {
       environment.tags = environment.EnvironmentTags.map((tag) => {
         return {
@@ -190,8 +203,12 @@ export class EnvironmentService {
       );
       environment.likes = likes;
       environment.isLiked = isLiked;
+      if (environment.isPrivate && environment.user.id !== requestedBy) {
+        continue;
+      }
+      environmentsToReturn.push(environment);
     }
-    return environments;
+    return environmentsToReturn;
   }
 
   async createEnvironment(data: EnvironmentDto, userId: number) {
