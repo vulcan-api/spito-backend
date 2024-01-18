@@ -15,6 +15,7 @@ import { OptionalJwtAuthGuard } from 'src/auth/guards/optionalJwtAuth.guard';
 import { EnvironmentService } from './environment.service';
 import { AuthGuard } from '@nestjs/passport';
 import { EnvironmentDto } from './dto/enviroment.dto';
+import { AddRuleToEnvironmentDto } from './dto/addRuleToEnvironment.dto';
 
 @Controller('environment')
 export class EnvironmentController {
@@ -59,6 +60,20 @@ export class EnvironmentController {
     @GetUser() user: JwtAuthDto,
   ) {
     return await this.environmentService.createEnvironment(data, user.userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/rules/add')
+  async addRuleToEnvironment(
+    @Param('id') id: number,
+    @Body() data: AddRuleToEnvironmentDto,
+    @GetUser() user: JwtAuthDto,
+  ) {
+    return await this.environmentService.addRuleToEnvironment(
+      id,
+      data.ruleId,
+      user.userId,
+    );
   }
 
   @Put(':id')
