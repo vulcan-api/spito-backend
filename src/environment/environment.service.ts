@@ -252,13 +252,20 @@ export class EnvironmentService {
   }
 
   async updateEnvironment(id: number, data: EnvironmentDto, userId: number) {
-    return await this.prisma.environment.update({
+    if (data.tags.length > 0) {
+      await this.updateTags(id, data.tags);
+    }
+    await this.prisma.environment.update({
       where: { id, userId },
       data: {
         name: data.name,
         description: data.description,
+        isPrivate: data.isPrivate,
       },
     });
+    return {
+      message: 'Environment updated',
+    };
   }
 
   async addRuleToEnvironment(
@@ -328,6 +335,7 @@ export class EnvironmentService {
       where: { id, userId },
     });
   }
+
   private async assignLikesToEnviroment(
     environmentId: number,
     requestedBy?: number,
@@ -347,5 +355,52 @@ export class EnvironmentService {
     return {
       likes,
     };
+  }
+
+  async updateTags(environmentId: number, tags: string[]) {
+    const environment = await this.prisma.environment.findUnique({
+      where: { id: environmentId },
+    });
+    if (!environment) {
+      throw new HttpException(
+        {
+          statusCode: 404,
+          message: 'Environment not found',
+          error: 'Not Found',
+        },
+        404,
+      );
+    }
+    await this.prisma.environmentTags.deleteMany({
+      where: {
+        environmentId,
+      },
+    });
+    for (const tag of tags) {
+      const newTag = await this.prisma.tag.upsert({
+        where: {
+          name: tag,
+        },
+        update: {},
+        create: {
+          name: tag,
+        },
+      });
+
+      await this.prisma.environmentTags.create({
+        data: {
+          environment: {
+            connect: {
+              id: environmentId,
+            },
+          },
+          tag: {
+            connect: {
+              id: newTag.id,
+            },
+          },
+        },
+      });
+    }
   }
 }
