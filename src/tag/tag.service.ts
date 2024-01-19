@@ -9,7 +9,7 @@ export class TagService {
     const exactMatch: any = await this.prisma.tag.findFirst({
       where: { name: search },
     });
-    const partialMatchCount = await this.prisma.rulesetTag.groupBy({
+    const partialRulesetMatchCount = await this.prisma.rulesetTag.groupBy({
       by: ['tagId'],
       _count: true,
       orderBy: {
@@ -20,11 +20,27 @@ export class TagService {
       where: { tag: { name: { startsWith: search } } },
       take: take - (exactMatch ? 1 : 0),
     });
+    const partialEnvironmentMatchCount =
+      await this.prisma.environmentTags.groupBy({
+        by: ['tagId'],
+        _count: true,
+        orderBy: {
+          _count: {
+            tagId: 'desc',
+          },
+        },
+        where: { tag: { name: { startsWith: search } } },
+        take: take - (exactMatch ? 1 : 0),
+      });
+    const partialMatchCount = [
+      ...partialRulesetMatchCount,
+      ...partialEnvironmentMatchCount,
+    ];
     const partialMatch: any = await this.prisma.tag.findMany({
       where: { id: { in: partialMatchCount.map((t) => t.tagId) } },
     });
     if (exactMatch) {
-      exactMatch.usageCount = partialMatchCount.find(
+      exactMatch.usageCount = partialMatch.find(
         (t) => t.tagId === exactMatch.id,
       )._count;
     }

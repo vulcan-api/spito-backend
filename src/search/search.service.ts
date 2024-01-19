@@ -208,6 +208,8 @@ export class SearchService {
       dataToReturn['environments'] = environments.filter(
         (environment) => environment.name !== query,
       );
+    } else {
+      dataToReturn['environments'] = environments;
     }
 
     dataToReturn['topResults'] = exactMatch;
