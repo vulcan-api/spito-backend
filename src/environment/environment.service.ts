@@ -297,6 +297,31 @@ export class EnvironmentService {
     };
   }
 
+  async deleteRuleFromEnvironment(
+    environmentId: number,
+    ruleId: number,
+    userId: number,
+  ) {
+    const environment = await this.prisma.environment.findUnique({
+      where: { id: environmentId },
+    });
+
+    if (!environment || environment.userId !== userId) {
+      throw new HttpException('Environment not found', 404);
+    }
+
+    await this.prisma.environmentRules.deleteMany({
+      where: {
+        environmentId,
+        ruleId,
+      },
+    });
+
+    return {
+      message: 'Rule deleted from the environment',
+    };
+  }
+
   async likeOrDislikeEnvironment(environmentId: number, userId: number) {
     const environment = await this.prisma.environment.findUnique({
       where: { id: environmentId },

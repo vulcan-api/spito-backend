@@ -103,6 +103,20 @@ export class EnvironmentController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Delete(':id/rules/:ruleId')
+  async deleteRuleFromEnvironment(
+    @Param('id') id: number,
+    @Param('ruleId') ruleId: number,
+    @GetUser() user: JwtAuthDto,
+  ) {
+    return await this.environmentService.deleteRuleFromEnvironment(
+      id,
+      ruleId,
+      user.userId,
+    );
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   async deleteEnvironment(
     @Param('id') id: number,
