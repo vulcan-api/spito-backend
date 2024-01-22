@@ -17,6 +17,7 @@ export class EnvironmentService {
         createdAt: true,
         updatedAt: true,
         isPrivate: true,
+        logo: true,
         user: {
           select: {
             id: true,
@@ -97,6 +98,7 @@ export class EnvironmentService {
         isPrivate: true,
         createdAt: true,
         updatedAt: true,
+        logo: true,
         user: {
           select: {
             id: true,
@@ -194,6 +196,7 @@ export class EnvironmentService {
         isPrivate: true,
         createdAt: true,
         updatedAt: true,
+        logo: true,
         user: {
           select: {
             id: true,
