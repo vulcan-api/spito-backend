@@ -3,10 +3,12 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Post,
   Put,
   Query,
+  Res,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -20,6 +22,7 @@ import { EnvironmentDto } from './dto/enviroment.dto';
 import { AddRuleToEnvironmentDto } from './dto/addRuleToEnvironment.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { fileFilter } from './fileFilter';
+import { Response } from 'express';
 
 @Controller('environment')
 export class EnvironmentController {
@@ -114,10 +117,10 @@ export class EnvironmentController {
   )
   @UseGuards(AuthGuard('jwt'))
   async updateAvatar(
-    @GetUser() user: JwtAuthDto,
+    @Param('id') id: number,
     @UploadedFiles() files: { logo: Express.Multer.File[] },
   ): Promise<void> {
-    await this.environmentService.updateLogo(files.logo[0], user.userId);
+    await this.environmentService.updateLogo(files.logo[0], id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -132,6 +135,22 @@ export class EnvironmentController {
       ruleId,
       user.userId,
     );
+  }
+
+  @Get(':id/logo')
+  async getEnvironmentLogo(
+    @Param('id') id: number,
+    @Res() response: Response,
+  ): Promise<void> {
+    response.setHeader('Content-Type', 'image/jpeg');
+    const image = await this.environmentService.getEnvironmentLogo(id);
+
+    if (!image) {
+      response.status(HttpStatus.NO_CONTENT);
+      response.send();
+      return;
+    }
+    response.send(image);
   }
 
   @UseGuards(AuthGuard('jwt'))

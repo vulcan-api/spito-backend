@@ -17,7 +17,6 @@ export class EnvironmentService {
         createdAt: true,
         updatedAt: true,
         isPrivate: true,
-        logo: true,
         user: {
           select: {
             id: true,
@@ -98,7 +97,6 @@ export class EnvironmentService {
         isPrivate: true,
         createdAt: true,
         updatedAt: true,
-        logo: true,
         user: {
           select: {
             id: true,
@@ -196,7 +194,6 @@ export class EnvironmentService {
         isPrivate: true,
         createdAt: true,
         updatedAt: true,
-        logo: true,
         user: {
           select: {
             id: true,
@@ -407,9 +404,9 @@ export class EnvironmentService {
     };
   }
 
-  async updateLogo(logoFile: Express.Multer.File, userId: number) {
+  async updateLogo(logoFile: Express.Multer.File, enviromentId: number) {
     return await this.prisma.environment.update({
-      where: { id: userId },
+      where: { id: enviromentId },
       data: { logo: logoFile.buffer },
     });
   }
@@ -459,5 +456,14 @@ export class EnvironmentService {
         },
       });
     }
+  }
+
+  getEnvironmentLogo(id: number): Promise<Buffer | null> {
+    return this.prisma.environment
+      .findUniqueOrThrow({
+        where: { id: id },
+        select: { logo: true },
+      })
+      .then((env) => env.logo);
   }
 }
