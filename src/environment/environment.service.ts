@@ -404,6 +404,13 @@ export class EnvironmentService {
     };
   }
 
+  async updateLogo(logoFile: Express.Multer.File, userId: number) {
+    return await this.prisma.environment.update({
+      where: { id: userId },
+      data: { logo: logoFile.buffer },
+    });
+  }
+
   async updateTags(environmentId: number, tags: string[]) {
     const environment = await this.prisma.environment.findUnique({
       where: { id: environmentId },

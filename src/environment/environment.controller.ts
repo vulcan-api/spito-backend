@@ -7,7 +7,9 @@ import {
   Post,
   Put,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { GetUser } from 'src/auth/decorator/getUser.decorator';
 import { JwtAuthDto } from 'src/auth/dto';
@@ -16,6 +18,8 @@ import { EnvironmentService } from './environment.service';
 import { AuthGuard } from '@nestjs/passport';
 import { EnvironmentDto } from './dto/enviroment.dto';
 import { AddRuleToEnvironmentDto } from './dto/addRuleToEnvironment.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { fileFilter } from './fileFilter';
 
 @Controller('environment')
 export class EnvironmentController {
@@ -100,6 +104,20 @@ export class EnvironmentController {
       data,
       user.userId,
     );
+  }
+
+  @Put(':id/logo')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'logo', maxCount: 1 }], {
+      fileFilter: fileFilter,
+    }),
+  )
+  @UseGuards(AuthGuard('jwt'))
+  async updateAvatar(
+    @GetUser() user: JwtAuthDto,
+    @UploadedFiles() files: { logo: Express.Multer.File[] },
+  ): Promise<void> {
+    await this.environmentService.updateLogo(files.logo[0], user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'))
