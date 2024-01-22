@@ -148,16 +148,38 @@ export class EnvironmentService {
     );
     environment.likes = likes;
     environment.isLiked = isLiked;
-    environment.rules = environment.EnvironmentRules.map((enviromentRule) => {
-      return {
-        id: enviromentRule.rule.id,
-        name: enviromentRule.rule.name,
-        description: enviromentRule.rule.description,
-        unsafe: enviromentRule.rule.unsafe,
-        createdAt: enviromentRule.rule.createdAt,
-        updatedAt: enviromentRule.rule.updatedAt,
-      };
-    });
+    const rules = [];
+    for (const rule of environment.EnvironmentRules) {
+      const likes = await this.prisma.likedRules.count({
+        where: { ruleId: rule.rule.id },
+      });
+      if (requestedBy) {
+        const liked = await this.prisma.likedRules.findFirst({
+          where: { ruleId: rule.rule.id, userId: requestedBy },
+        });
+        rules.push({
+          id: rule.rule.id,
+          name: rule.rule.name,
+          description: rule.rule.description,
+          unsafe: rule.rule.unsafe,
+          createdAt: rule.rule.createdAt,
+          updatedAt: rule.rule.updatedAt,
+          likes,
+          isLiked: !!liked,
+        });
+      } else {
+        rules.push({
+          id: rule.rule.id,
+          name: rule.rule.name,
+          description: rule.rule.description,
+          unsafe: rule.rule.unsafe,
+          createdAt: rule.rule.createdAt,
+          updatedAt: rule.rule.updatedAt,
+          likes,
+        });
+      }
+    }
+    environment.rules = rules;
     environment.EnvironmentRules = undefined;
     return environment;
   }
