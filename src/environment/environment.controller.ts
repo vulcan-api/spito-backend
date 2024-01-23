@@ -42,6 +42,12 @@ export class EnvironmentController {
     );
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get('liked')
+  async getLikedEnvironments(@GetUser() user: JwtAuthDto) {
+    return await this.environmentService.getUserLikedEnvironments(user.userId);
+  }
+
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   async getEnvironmentById(

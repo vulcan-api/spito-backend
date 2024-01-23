@@ -235,6 +235,60 @@ export class EnvironmentService {
     return environmentsToReturn;
   }
 
+  async getUserLikedEnvironments(userId: number) {
+    const likedEnvironments = await this.prisma.likedEnvironment.findMany({
+      where: { userId },
+      select: {
+        environment: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            isPrivate: true,
+            logo: true,
+            createdAt: true,
+            updatedAt: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+            EnvironmentTags: {
+              select: {
+                tag: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    const environmentsToReturn = [];
+    for (const likedEnvironment of likedEnvironments) {
+      const environment: any = likedEnvironment.environment;
+      environment.tags = environment.EnvironmentTags.map((tag) => {
+        return {
+          id: tag.tag.id,
+          name: tag.tag.name,
+        };
+      });
+      environment.EnvironmentTags = undefined;
+      const { likes, isLiked } = await this.assignLikesToEnviroment(
+        environment.id,
+        userId,
+      );
+      environment.likes = likes;
+      environment.isLiked = isLiked;
+      environmentsToReturn.push(environment);
+    }
+    return environmentsToReturn;
+  }
+
   async createEnvironment(data: EnvironmentDto, userId: number) {
     const environment = await this.prisma.environment.create({
       data: {
