@@ -235,8 +235,8 @@ export class EnvironmentService {
     return environmentsToReturn;
   }
 
-  async getUserLikedEnvironments(userId: number) {
-    const likedEnvironments = await this.prisma.likedEnvironment.findMany({
+  async getUserSavedEnvironments(userId: number) {
+    const savedEnvironments = await this.prisma.savedEnvironment.findMany({
       where: { userId },
       select: {
         environment: {
@@ -269,8 +269,8 @@ export class EnvironmentService {
       },
     });
     const environmentsToReturn = [];
-    for (const likedEnvironment of likedEnvironments) {
-      const environment: any = likedEnvironment.environment;
+    for (const savedEnvironment of savedEnvironments) {
+      const environment: any = savedEnvironment.environment;
       environment.tags = environment.EnvironmentTags.map((tag) => {
         return {
           id: tag.tag.id,
@@ -428,6 +428,59 @@ export class EnvironmentService {
     });
     return {
       message: 'Environment liked',
+    };
+  }
+
+  async saveOrUnsaveEnvironment(environmentId: number, userId: number) {
+    const environment = await this.prisma.environment.findUnique({
+      where: { id: environmentId },
+    });
+
+    if (!environment) {
+      throw new HttpException('Environment not found', 404);
+    }
+
+    const saved = await this.prisma.savedEnvironment.findFirst({
+      where: { environmentId, userId },
+    });
+
+    if (saved) {
+      await this.prisma.savedEnvironment.delete({
+        where: { id: saved.id },
+      });
+      return {
+        message: 'Environment unsaved',
+      };
+    }
+
+    await this.prisma.savedEnvironment.create({
+      data: {
+        environmentId,
+        userId,
+      },
+    });
+    return {
+      message: 'Environment saved',
+    };
+  }
+
+  async downloadEnvironment(environmentId: number, userId: number) {
+    const environment = await this.prisma.environment.findUnique({
+      where: { id: environmentId },
+    });
+
+    if (!environment) {
+      throw new HttpException('Environment not found', 404);
+    }
+
+    await this.prisma.downloadedEnvironment.create({
+      data: {
+        environmentId,
+        userId,
+      },
+    });
+    return {
+      message: 'Environment downloaded',
     };
   }
 
