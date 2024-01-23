@@ -8,19 +8,21 @@ datasource db {
 }
 
 model User {
-  id               Int                @id @default(autoincrement())
-  email            String             @unique
-  username         String
-  password         String
-  totpSecret       String?
-  avatar           Bytes?
-  description      String?
-  Roles            Roles[]
-  rulesets         Ruleset[]
-  LikedRules       LikedRules[]
-  Token            Token[]
-  Environment      Environment[]
-  LikedEnvironment LikedEnvironment[]
+  id                    Int                     @id @default(autoincrement())
+  email                 String                  @unique
+  username              String
+  password              String
+  totpSecret            String?
+  avatar                Bytes?
+  description           String?
+  Roles                 Roles[]
+  rulesets              Ruleset[]
+  LikedRules            LikedRules[]
+  Token                 Token[]
+  Environment           Environment[]
+  LikedEnvironment      LikedEnvironment[]
+  SavedEnvironment      SavedEnvironment[]
+  DownloadedEnvironment DownloadedEnvironment[]
 }
 
 model Token {
@@ -97,18 +99,42 @@ model LikedRules {
 }
 
 model Environment {
-  id                Int                @id @default(autoincrement())
-  name              String
-  description       String?
-  logo              Bytes?
-  isPrivate         Boolean            @default(false)
-  userId            Int
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  EnvironmentRules  EnvironmentRules[]
-  EnvironmentTags   EnvironmentTags[]
-  LikedEnvironments LikedEnvironment[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                    Int                     @id @default(autoincrement())
+  name                  String
+  description           String?
+  logo                  Bytes?
+  isPrivate             Boolean                 @default(false)
+  userId                Int
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  EnvironmentRules      EnvironmentRules[]
+  EnvironmentTags       EnvironmentTags[]
+  LikedEnvironments     LikedEnvironment[]
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  SavedEnvironment      SavedEnvironment[]
+  DownloadedEnvironment DownloadedEnvironment[]
+}
+
+model SavedEnvironment {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environmentId Int
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([userId, environmentId])
+}
+
+model DownloadedEnvironment {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environmentId Int
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model EnvironmentRules {
