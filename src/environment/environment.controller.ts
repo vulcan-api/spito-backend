@@ -56,8 +56,8 @@ export class EnvironmentController {
     @GetUser() user: JwtAuthDto,
   ) {
     return await this.environmentService.getTrendingEnvironments(
-      skip,
-      take,
+      +skip,
+      +take,
       user.userId,
     );
   }
