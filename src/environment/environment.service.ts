@@ -101,6 +101,14 @@ export class EnvironmentService {
           environmentId: 'desc',
         },
       },
+      where: {
+        environment: {
+          isPrivate: false,
+        },
+        createdAt: {
+          gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+        },
+      },
       skip,
       take,
     });
