@@ -44,7 +44,7 @@ export class EnvironmentController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('saved')
-  async getLikedEnvironments(@GetUser() user: JwtAuthDto) {
+  async getSavedEnvironments(@GetUser() user: JwtAuthDto) {
     return await this.environmentService.getUserSavedEnvironments(user.userId);
   }
 
@@ -92,13 +92,32 @@ export class EnvironmentController {
     );
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/save')
+  async saveOrUnsaveEnvironment(
+    @Param('id') id: number,
+    @GetUser() user: JwtAuthDto,
+  ) {
+    return await this.environmentService.saveOrUnsaveEnvironment(
+      id,
+      user.userId,
+    );
+  }
+
   @UseGuards(OptionalJwtAuthGuard)
   @Get('user/:id')
   async getUserEnvironments(
     @Param('id') id: number,
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
     @GetUser() user: JwtAuthDto,
   ) {
-    return await this.environmentService.getUserEnvironments(id, user.userId);
+    return await this.environmentService.getUserEnvironments(
+      id,
+      +skip,
+      +take,
+      user.userId,
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))

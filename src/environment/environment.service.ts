@@ -7,87 +7,7 @@ export class EnvironmentService {
   constructor(private readonly prisma: DbService) {}
 
   async getAllEnvironments(skip = 1, take = 10, requestedBy?: number) {
-    const environments: any = await this.prisma.environment.findMany({
-      skip,
-      take,
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        createdAt: true,
-        updatedAt: true,
-        isPrivate: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        EnvironmentTags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    const enviromentsTransactions = [];
-    const isLikedTransactions = [];
-    for (const environment of environments) {
-      enviromentsTransactions.push(
-        this.prisma.likedEnvironment.count({
-          where: { environmentId: environment.id },
-        }),
-      );
-      if (requestedBy) {
-        isLikedTransactions.push(
-          this.prisma.likedEnvironment.findFirst({
-            where: { environmentId: environment.id, userId: requestedBy },
-          }),
-        );
-      }
-    }
-    const enviromentResults = await this.prisma.$transaction(
-      enviromentsTransactions,
-    );
-    for (const result of enviromentResults) {
-      environments[enviromentResults.indexOf(result)].likes = result;
-    }
-    if (requestedBy) {
-      const isLikedResults =
-        await this.prisma.$transaction(isLikedTransactions);
-      for (const result of isLikedResults) {
-        environments[isLikedResults.indexOf(result)].isLiked = result
-          ? true
-          : false;
-      }
-    }
-    const environmentsToReturn = [];
-
-    for (const environment of environments) {
-      environment.tags = environment.EnvironmentTags.map((enviromentTag) => {
-        return {
-          id: enviromentTag.tag.id,
-          name: enviromentTag.tag.name,
-        };
-      });
-      environment.EnvironmentTags = undefined;
-      const { likes, isLiked } = await this.assignLikesToEnviroment(
-        environment.id,
-        requestedBy,
-      );
-      environment.likes = likes;
-      environment.isLiked = isLiked;
-      if (environment.isPrivate && environment.user.id !== requestedBy) {
-        continue;
-      }
-      environmentsToReturn.push(environment);
-    }
-    return environmentsToReturn;
+    return await this.getEnvironments(skip, take, requestedBy);
   }
 
   async getTrendingEnvironments(skip = 1, take = 10, requestedBy?: number) {
@@ -112,87 +32,17 @@ export class EnvironmentService {
       skip,
       take,
     });
-    const environments: any = await this.prisma.environment.findMany({
-      where: {
-        id: {
-          in: environmentsCount.map((env) => env.environmentId),
-        },
+    const whereParams = {
+      id: {
+        in: environmentsCount.map((env) => env.environmentId),
       },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        createdAt: true,
-        updatedAt: true,
-        isPrivate: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        EnvironmentTags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    const enviromentsTransactions = [];
-    const isLikedTransactions = [];
-    for (const environment of environments) {
-      enviromentsTransactions.push(
-        this.prisma.likedEnvironment.count({
-          where: { environmentId: environment.id },
-        }),
-      );
-      if (requestedBy) {
-        isLikedTransactions.push(
-          this.prisma.likedEnvironment.findFirst({
-            where: { environmentId: environment.id, userId: requestedBy },
-          }),
-        );
-      }
-    }
-    const enviromentResults = await this.prisma.$transaction(
-      enviromentsTransactions,
+    };
+    return await this.getEnvironments(
+      0,
+      environmentsCount.length,
+      requestedBy,
+      whereParams,
     );
-    for (const result of enviromentResults) {
-      environments[enviromentResults.indexOf(result)].likes = result;
-    }
-    if (requestedBy) {
-      const isLikedResults =
-        await this.prisma.$transaction(isLikedTransactions);
-      for (const result of isLikedResults) {
-        environments[isLikedResults.indexOf(result)].isLiked = result
-          ? true
-          : false;
-      }
-    }
-    const environmentsToReturn = [];
-
-    for (const environment of environments) {
-      environment.tags = environment.EnvironmentTags.map((enviromentTag) => {
-        return {
-          id: enviromentTag.tag.id,
-          name: enviromentTag.tag.name,
-        };
-      });
-      environment.EnvironmentTags = undefined;
-      environment.downloads = environmentsCount.find(
-        (env) => env.environmentId === environment.id,
-      )._count.environmentId;
-      if (environment.isPrivate && environment.user.id !== requestedBy) {
-        continue;
-      }
-      environmentsToReturn.push(environment);
-    }
-    return environmentsToReturn;
   }
 
   async getEnvironmentById(id: number, requestedBy?: number) {
@@ -209,6 +59,27 @@ export class EnvironmentService {
           select: {
             id: true,
             username: true,
+          },
+        },
+        LikedEnvironments: {
+          select: {
+            id: true,
+            environmentId: true,
+            userId: true,
+          },
+        },
+        SavedEnvironment: {
+          select: {
+            id: true,
+            environmentId: true,
+            userId: true,
+          },
+        },
+        DownloadedEnvironment: {
+          select: {
+            id: true,
+            environmentId: true,
+            userId: true,
           },
         },
         EnvironmentTags: {
@@ -231,6 +102,13 @@ export class EnvironmentService {
                 unsafe: true,
                 createdAt: true,
                 updatedAt: true,
+                LikedRules: {
+                  select: {
+                    id: true,
+                    ruleId: true,
+                    userId: true,
+                  },
+                },
               },
             },
           },
@@ -250,21 +128,24 @@ export class EnvironmentService {
       };
     });
     environment.EnvironmentTags = undefined;
-    const { likes, isLiked } = await this.assignLikesToEnviroment(
-      environment.id,
-      requestedBy,
-    );
-    environment.likes = likes;
-    environment.isLiked = isLiked;
+    environment.likes = environment.LikedEnvironments.length;
+    environment.saves = environment.SavedEnvironment.length;
+    environment.downloads = environment.DownloadedEnvironment.length;
+    if (requestedBy) {
+      environment.isSaved = environment.SavedEnvironment.some(
+        (save) => save.userId === requestedBy,
+      );
+      environment.isLiked = environment.LikedEnvironments.some(
+        (like) => like.userId === requestedBy,
+      );
+    }
     const rules = [];
     for (const rule of environment.EnvironmentRules) {
-      const likes = await this.prisma.likedRules.count({
-        where: { ruleId: rule.rule.id },
-      });
+      const likes = rule.rule.LikedRules.length;
       if (requestedBy) {
-        const liked = await this.prisma.likedRules.findFirst({
-          where: { ruleId: rule.rule.id, userId: requestedBy },
-        });
+        const liked = rule.rule.LikedRules.some(
+          (like) => like.userId === requestedBy,
+        );
         rules.push({
           id: rule.rule.id,
           name: rule.rule.name,
@@ -289,112 +170,31 @@ export class EnvironmentService {
     }
     environment.rules = rules;
     environment.EnvironmentRules = undefined;
+    environment.SavedEnvironment = undefined;
+    environment.LikedEnvironments = undefined;
+    environment.DownloadedEnvironment = undefined;
     return environment;
   }
 
-  async getUserEnvironments(userId: number, requestedBy?: number) {
-    const environments: any = await this.prisma.environment.findMany({
-      where: { userId },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        isPrivate: true,
-        createdAt: true,
-        updatedAt: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        EnvironmentTags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+  async getUserEnvironments(
+    userId: number,
+    skip = 0,
+    take = 10,
+    requestedBy?: number,
+  ) {
+    return await this.getEnvironments(skip, take, requestedBy, {
+      userId,
     });
-    const environmentsToReturn = [];
-    for (const environment of environments) {
-      environment.tags = environment.EnvironmentTags.map((tag) => {
-        return {
-          id: tag.tag.id,
-          name: tag.tag.name,
-        };
-      });
-      environment.EnvironmentTags = undefined;
-      const { likes, isLiked } = await this.assignLikesToEnviroment(
-        environment.id,
-        requestedBy,
-      );
-      environment.likes = likes;
-      environment.isLiked = isLiked;
-      if (environment.isPrivate && environment.user.id !== requestedBy) {
-        continue;
-      }
-      environmentsToReturn.push(environment);
-    }
-    return environmentsToReturn;
   }
 
   async getUserSavedEnvironments(userId: number) {
-    const savedEnvironments = await this.prisma.savedEnvironment.findMany({
-      where: { userId },
-      select: {
-        environment: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            isPrivate: true,
-            logo: true,
-            createdAt: true,
-            updatedAt: true,
-            user: {
-              select: {
-                id: true,
-                username: true,
-              },
-            },
-            EnvironmentTags: {
-              select: {
-                tag: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
+    return await this.getEnvironments(0, 100, userId, {
+      SavedEnvironment: {
+        some: {
+          userId,
         },
       },
     });
-    const environmentsToReturn = [];
-    for (const savedEnvironment of savedEnvironments) {
-      const environment: any = savedEnvironment.environment;
-      environment.tags = environment.EnvironmentTags.map((tag) => {
-        return {
-          id: tag.tag.id,
-          name: tag.tag.name,
-        };
-      });
-      environment.EnvironmentTags = undefined;
-      const { likes, isLiked } = await this.assignLikesToEnviroment(
-        environment.id,
-        userId,
-      );
-      environment.likes = likes;
-      environment.isLiked = isLiked;
-      environmentsToReturn.push(environment);
-    }
-    return environmentsToReturn;
   }
 
   async createEnvironment(data: EnvironmentDto, userId: number) {
@@ -598,27 +398,6 @@ export class EnvironmentService {
     });
   }
 
-  private async assignLikesToEnviroment(
-    environmentId: number,
-    requestedBy?: number,
-  ) {
-    const likes = await this.prisma.likedEnvironment.count({
-      where: { environmentId },
-    });
-    if (requestedBy) {
-      const liked = await this.prisma.likedEnvironment.findFirst({
-        where: { environmentId, userId: requestedBy },
-      });
-      return {
-        likes,
-        isLiked: !!liked,
-      };
-    }
-    return {
-      likes,
-    };
-  }
-
   async updateLogo(logoFile: Express.Multer.File, enviromentId: number) {
     return await this.prisma.environment.update({
       where: { id: enviromentId },
@@ -671,6 +450,92 @@ export class EnvironmentService {
         },
       });
     }
+  }
+
+  private async getEnvironments(
+    skip: number,
+    take: number,
+    requestedBy?: number,
+    whereParams?: any,
+  ) {
+    const environments: any = await this.prisma.environment.findMany({
+      where: whereParams,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        isPrivate: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+        LikedEnvironments: {
+          select: {
+            id: true,
+            environmentId: true,
+            userId: true,
+          },
+        },
+        SavedEnvironment: {
+          select: {
+            id: true,
+            environmentId: true,
+            userId: true,
+          },
+        },
+        DownloadedEnvironment: {
+          select: {
+            id: true,
+            environmentId: true,
+            userId: true,
+          },
+        },
+        EnvironmentTags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take,
+    });
+    const environmentsToReturn = [];
+
+    for (const environment of environments) {
+      environment.tags = environment.EnvironmentTags.map((enviromentTag) => {
+        return {
+          id: enviromentTag.tag.id,
+          name: enviromentTag.tag.name,
+        };
+      });
+      environment.EnvironmentTags = undefined;
+      environment.likes = environment.LikedEnvironments.length;
+      environment.saves = environment.SavedEnvironment.length;
+      environment.downloads = environment.DownloadedEnvironment.length;
+      environment.isSaved = environment.SavedEnvironment.some(
+        (save) => save.userId === requestedBy,
+      );
+      environment.isLiked = environment.LikedEnvironments.some(
+        (like) => like.userId === requestedBy,
+      );
+      if (environment.isPrivate && environment.user.id !== requestedBy) {
+        continue;
+      }
+      environment.SavedEnvironment = undefined;
+      environment.LikedEnvironments = undefined;
+      environment.DownloadedEnvironment = undefined;
+      environmentsToReturn.push(environment);
+    }
+    return environmentsToReturn;
   }
 
   getEnvironmentLogo(id: number): Promise<Buffer | null> {
