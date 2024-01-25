@@ -54,14 +54,17 @@ export class EnvironmentService {
     const enviromentResults = await this.prisma.$transaction(
       enviromentsTransactions,
     );
-    const isLikedResults = await this.prisma.$transaction(isLikedTransactions);
     for (const result of enviromentResults) {
       environments[enviromentResults.indexOf(result)].likes = result;
     }
-    for (const result of isLikedResults) {
-      environments[isLikedResults.indexOf(result)].isLiked = result
-        ? true
-        : false;
+    if (requestedBy) {
+      const isLikedResults =
+        await this.prisma.$transaction(isLikedTransactions);
+      for (const result of isLikedResults) {
+        environments[isLikedResults.indexOf(result)].isLiked = result
+          ? true
+          : false;
+      }
     }
     const environmentsToReturn = [];
 
@@ -79,6 +82,103 @@ export class EnvironmentService {
       );
       environment.likes = likes;
       environment.isLiked = isLiked;
+      if (environment.isPrivate && environment.user.id !== requestedBy) {
+        continue;
+      }
+      environmentsToReturn.push(environment);
+    }
+    return environmentsToReturn;
+  }
+
+  async getTrendingEnvironments(skip = 1, take = 10, requestedBy?: number) {
+    const environmentsCount = await this.prisma.downloadedEnvironment.groupBy({
+      by: ['environmentId'],
+      _count: {
+        environmentId: true,
+      },
+      orderBy: {
+        _count: {
+          environmentId: 'desc',
+        },
+      },
+      skip,
+      take,
+    });
+    const environments: any = await this.prisma.environment.findMany({
+      where: {
+        id: {
+          in: environmentsCount.map((env) => env.environmentId),
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        isPrivate: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+        EnvironmentTags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    const enviromentsTransactions = [];
+    const isLikedTransactions = [];
+    for (const environment of environments) {
+      enviromentsTransactions.push(
+        this.prisma.likedEnvironment.count({
+          where: { environmentId: environment.id },
+        }),
+      );
+      if (requestedBy) {
+        isLikedTransactions.push(
+          this.prisma.likedEnvironment.findFirst({
+            where: { environmentId: environment.id, userId: requestedBy },
+          }),
+        );
+      }
+    }
+    const enviromentResults = await this.prisma.$transaction(
+      enviromentsTransactions,
+    );
+    for (const result of enviromentResults) {
+      environments[enviromentResults.indexOf(result)].likes = result;
+    }
+    if (requestedBy) {
+      const isLikedResults =
+        await this.prisma.$transaction(isLikedTransactions);
+      for (const result of isLikedResults) {
+        environments[isLikedResults.indexOf(result)].isLiked = result
+          ? true
+          : false;
+      }
+    }
+    const environmentsToReturn = [];
+
+    for (const environment of environments) {
+      environment.tags = environment.EnvironmentTags.map((enviromentTag) => {
+        return {
+          id: enviromentTag.tag.id,
+          name: enviromentTag.tag.name,
+        };
+      });
+      environment.EnvironmentTags = undefined;
+      environment.downloads = environmentsCount.find(
+        (env) => env.environmentId === environment.id,
+      )._count.environmentId;
       if (environment.isPrivate && environment.user.id !== requestedBy) {
         continue;
       }

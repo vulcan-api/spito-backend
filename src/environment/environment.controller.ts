@@ -48,6 +48,20 @@ export class EnvironmentController {
     return await this.environmentService.getUserSavedEnvironments(user.userId);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('trending')
+  async getTrendingEnvironments(
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
+    @GetUser() user: JwtAuthDto,
+  ) {
+    return await this.environmentService.getTrendingEnvironments(
+      skip,
+      take,
+      user.userId,
+    );
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('download/:id')
   async downloadEnvironment(
