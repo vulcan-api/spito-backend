@@ -42,8 +42,8 @@ dependencies:
     specifier: ^16.4.1
     version: 16.4.1
   js-sha512:
-    specifier: ^0.8.0
-    version: 0.8.0
+    specifier: ^0.9.0
+    version: 0.9.0
   multer:
     specifier: 1.4.5-lts.1
     version: 1.4.5-lts.1
@@ -3868,8 +3868,8 @@ packages:
       - ts-node
     dev: true
 
-  /js-sha512@0.8.0:
-    resolution: {integrity: sha512-PWsmefG6Jkodqt+ePTvBZCSMFgN7Clckjd0O7su3I0+BW2QWUTJNzjktHsztGLhncP2h8mcF9V9Y2Ha59pAViQ==}
+  /js-sha512@0.9.0:
+    resolution: {integrity: sha512-mirki9WS/SUahm+1TbAPkqvbCiCfOAAsyXeHxK1UkullnJVVqoJG2pL9ObvT05CN+tM7fxhfYm0NbXn+1hWoZg==}
     dev: false
 
   /js-tokens@4.0.0:
