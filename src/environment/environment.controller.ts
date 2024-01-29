@@ -33,11 +33,20 @@ export class EnvironmentController {
   async getAllEnvironments(
     @Query('skip') skip = 0,
     @Query('take') take = 10,
+    @Query('tags') tags: string,
+    @Query('orderBy') orderBy: string,
+    @Query('descending') descending: boolean,
+    @Query('search') search: string,
     @GetUser() user: JwtAuthDto,
   ) {
+    const parsedTags = tags ? tags.split(',') : [];
     return await this.environmentService.getAllEnvironments(
       skip,
       take,
+      parsedTags,
+      search,
+      orderBy,
+      descending,
       user.userId,
     );
   }
