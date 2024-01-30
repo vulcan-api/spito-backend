@@ -6,8 +6,77 @@ import { EnvironmentDto } from './dto/enviroment.dto';
 export class EnvironmentService {
   constructor(private readonly prisma: DbService) {}
 
-  async getAllEnvironments(skip = 1, take = 10, requestedBy?: number) {
-    return await this.getEnvironments(skip, take, requestedBy);
+  async getAllEnvironments(
+    skip = 1,
+    take = 10,
+    tags: string[],
+    search?: string,
+    orderBy?: string,
+    descending?: boolean,
+    requestedBy?: number,
+  ) {
+    const whereParams = {};
+    const orderParams = {};
+    if (tags && tags.length > 0) {
+      const environmentWithTags = await this.prisma.environmentTags.findMany({
+        where: {
+          tag: {
+            name: {
+              in: tags,
+            },
+          },
+        },
+        select: {
+          environment: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+      const environmentIds = environmentWithTags.map(
+        (environment) => environment.environment.id,
+      );
+      whereParams['id'] = {
+        in: environmentIds,
+      };
+    }
+    if (search) {
+      whereParams['OR'] = [
+        {
+          name: {
+            contains: search,
+          },
+        },
+        {
+          description: {
+            contains: search,
+          },
+        },
+      ];
+    }
+    if (orderBy) {
+      if (orderBy === 'downloads') {
+        orderParams['DownloadedEnvironment'] = {
+          _count: descending ? 'desc' : 'asc',
+        };
+      } else if (orderBy === 'likes') {
+        orderParams['LikedEnvironments'] = {
+          _count: descending ? 'desc' : 'asc',
+        };
+      } else if (orderBy === 'saves') {
+        orderParams['SavedEnvironment'] = {
+          _count: descending ? 'desc' : 'asc',
+        };
+      }
+    }
+    return await this.getEnvironments(
+      skip,
+      take,
+      requestedBy,
+      whereParams,
+      orderParams,
+    );
   }
 
   async getTrendingEnvironments(skip = 1, take = 10, requestedBy?: number) {
@@ -457,6 +526,7 @@ export class EnvironmentService {
     take: number,
     requestedBy?: number,
     whereParams?: any,
+    orderParams?: any,
   ) {
     const environments: any = await this.prisma.environment.findMany({
       where: whereParams,
@@ -505,6 +575,7 @@ export class EnvironmentService {
           },
         },
       },
+      orderBy: orderParams,
       skip,
       take,
     });
