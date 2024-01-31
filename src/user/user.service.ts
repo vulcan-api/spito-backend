@@ -55,15 +55,20 @@ export class UserService {
         },
       },
     });
+    const environmentsToReturn = [];
+    data.Environment.forEach((env) => {
+      if (env.isPrivate) {
+        if (data.id === requestedBy) {
+          environmentsToReturn.push(env);
+        }
+      } else {
+        environmentsToReturn.push(env);
+      }
+    });
+
     return {
       createdRulesets: data.rulesets,
-      createdEnvironments: data.Environment.map((env) => {
-        if (env.isPrivate) {
-          return data.id === requestedBy && env;
-        } else {
-          return env;
-        }
-      }),
+      createdEnvironments: environmentsToReturn,
     };
   }
 }
