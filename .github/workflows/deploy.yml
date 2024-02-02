@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+    
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: pnpm i
+    - name: Create .env
+      run: echo "${{secrets.ENV_PRODUCTION}}" > .env
+    - name: Build project
+      run: pnpm build
+    - name: Restart service
+      run: pm2 restart spito-backend || pm2 start dist/main.js --name spito-backend
+
