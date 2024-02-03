@@ -71,8 +71,8 @@ export class EnvironmentService {
       }
     }
     return await this.getEnvironments(
-      skip,
-      take,
+      +skip,
+      +take,
       requestedBy,
       whereParams,
       orderParams,
