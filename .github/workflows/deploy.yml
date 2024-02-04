@@ -23,6 +23,8 @@ jobs:
       run: pnpm i
     - name: Create .env
       run: echo "${{secrets.ENV_PRODUCTION}}" > .env
+    - name: Generate prisma
+      run: npx prisma generate
     - name: Build project
       run: pnpm build
     - name: Restart service
