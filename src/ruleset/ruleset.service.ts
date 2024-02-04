@@ -66,6 +66,10 @@ export class RulesetService {
       take,
     });
 
+    const count = await this.prisma.ruleset.count({
+      where: whereParams,
+    });
+
     for (const ruleset of rulesets) {
       const rules = await this.assignLikesToRules(ruleset.rules, requestedBy);
       ruleset.rules = rules;
@@ -75,7 +79,10 @@ export class RulesetService {
       ruleset.rulesetTags = undefined;
     }
 
-    return rulesets;
+    return {
+      data: rulesets,
+      totalRulesets: count,
+    };
   }
 
   async getUserRulesets(
