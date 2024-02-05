@@ -55,6 +55,18 @@ export class EnvironmentService {
         },
       ];
     }
+    if (requestedBy) {
+      whereParams['OR'] = [
+        {
+          isPrivate: false,
+        },
+        {
+          userId: requestedBy,
+        },
+      ];
+    } else {
+      whereParams['isPrivate'] = false;
+    }
     if (orderBy) {
       if (orderBy === 'downloads') {
         orderParams['DownloadedEnvironment'] = {
@@ -70,13 +82,21 @@ export class EnvironmentService {
         };
       }
     }
-    return await this.getEnvironments(
+    const environments = await this.getEnvironments(
       +skip,
       +take,
       requestedBy,
       whereParams,
       orderParams,
     );
+    const environmentsCount = await this.prisma.environment.count({
+      where: whereParams,
+    });
+
+    return {
+      data: environments,
+      count: environmentsCount,
+    };
   }
 
   async getTrendingEnvironments(skip = 1, take = 10, requestedBy?: number) {

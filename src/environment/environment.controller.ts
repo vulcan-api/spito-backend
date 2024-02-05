@@ -41,8 +41,8 @@ export class EnvironmentController {
   ) {
     const parsedTags = tags ? tags.split(',') : [];
     return await this.environmentService.getAllEnvironments(
-      skip,
-      take,
+      +skip,
+      +take,
       parsedTags,
       search,
       orderBy,
