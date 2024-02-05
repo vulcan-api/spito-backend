@@ -55,18 +55,7 @@ export class EnvironmentService {
         },
       ];
     }
-    if (requestedBy) {
-      whereParams['OR'] = [
-        {
-          isPrivate: false,
-        },
-        {
-          userId: requestedBy,
-        },
-      ];
-    } else {
-      whereParams['isPrivate'] = false;
-    }
+    whereParams['isPrivate'] = false;
     if (orderBy) {
       if (orderBy === 'downloads') {
         orderParams['DownloadedEnvironment'] = {

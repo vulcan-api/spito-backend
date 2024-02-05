@@ -24,6 +24,9 @@ export class UserService {
     to: Date,
     requestedBy: number,
   ) {
+    const inclusiveTo = new Date(to);
+    inclusiveTo.setDate(inclusiveTo.getDate() + 1);
+
     const data = await this.prisma.user.findFirst({
       where: { id: userId },
       select: {
@@ -36,7 +39,7 @@ export class UserService {
           where: {
             createdAt: {
               gte: new Date(from),
-              lte: new Date(to),
+              lte: inclusiveTo,
             },
           },
         },
@@ -49,7 +52,7 @@ export class UserService {
           where: {
             createdAt: {
               gte: new Date(from),
-              lte: new Date(to),
+              lte: inclusiveTo,
             },
           },
         },
