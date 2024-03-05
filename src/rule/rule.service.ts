@@ -8,6 +8,27 @@ export class RuleService {
   async getUserRules(userId: number, skip = 0, take = 10, requestedBy: number) {
     const rules: any = await this.prisma.rule.findMany({
       where: { ruleset: { userId } },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        unsafe: true,
+        createdAt: true,
+        updatedAt: true,
+        ruleset: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
       skip,
       take,
     });
